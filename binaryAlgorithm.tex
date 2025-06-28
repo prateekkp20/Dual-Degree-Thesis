@@ -1,0 +1,20 @@
+\begin{algorithm}[htbp]
+\caption{Binary Search to Find Simulation Box Vacuum}
+\label{alg:vacuum}
+\KwData{Side Length: $L > 0$, gamma: $\gamma$}
+\KwResult{Optimum vacuum for simulation box}
+\textbf{Input:} Side Length: $L$, gamma: $\gamma$, \textbf{Optional: }margin = 5, maxVacuum = 1000 \\
+$\text{low} \gets 2 \times L$,
+$\text{high} \gets \text{maxVacuum}$
+
+\While{$\text{high} - \text{low} > 1$}{
+    $\text{mid} \gets \frac{\text{low} + \text{high}}{2}$ \;
+    \If{$\text{tophat}(L, \gamma, \text{mid}) == 1$}{
+        $\text{high} \gets \text{mid}$ \;
+    }
+    \Else{
+        $\text{low} \gets \text{mid}$ \;
+    }
+}
+\Return $\text{margin} + \text{high} $\;
+\end{algorithm}

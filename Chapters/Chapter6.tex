@@ -1,0 +1,22 @@
+% Chapter Template
+
+\chapter{Performance Analysis and Optimisation}
+
+\label{Chapter6}
+
+\lhead{Chapter 6. \emph{Performance Analysis and Optimisation}}
+
+\section{Memory Optimisation via Array Flattening}
+In the implementation, data involving multiple dimensions must be stored in several parts of the program, such as atom positions and charge spreading array for the SPME. While multidimensional arrays are a natural choice for such data, they have drawbacks. 
+
+Dynamically allocated multidimensional arrays often lead to scattered memory layouts and multiple pointer dereferences. This results in poor cache performance and added complexity in memory management. 
+To address this, a one-dimensional array was used to represent the multidimensional structure. For an array with rank $d$ and dimensions $n_1\times \ldots \times n_d$, an element at ($i_1\times \ldots \times i_d$) maps to:
+\begin{flalign*}
+    i_d + n_d \cdot \left( i_{d-1} + n_{d-1} \cdot \left( \ldots + n_2 \cdot i_1 \right)\right)
+\end{flalign*}
+This approach reduced overhead, improved memory locality, and allowed faster access through direct indexing.
+
+% the indexing line is taken from the fftw tutorial website.
+% https://www.fftw.org/fftw2_doc/fftw_2.html
+
+
