@@ -72,11 +72,9 @@
 %\cleardoublepage
 }
 
-
-
 \newcommand\btypeout[1]{\bhrule\typeout{\space #1}\bhrule}
 % \def\today{February 2019}
-% Uncomment above if you donot want to have dynamic Month and Year
+% Uncomment above if you do not want to have dynamic Month and Year
 \def\today{\ifcase\month\or
   January\or February\or March\or April\or May\or June\or
   July\or August\or September\or October\or November\or December\fi
@@ -205,7 +203,7 @@
 \thesistitle{Fast 2D Ewald Something} % Your thesis title - this is used in the title and abstract
 %-------------------------------------------------  
 \supervisorA{\href{https://home.iitk.ac.in/~vagarwal/}{Prof. Vishal Agarwal}} % You supervisor1's name - this is used in the title page
-\supervisorB{\href{https://www.cse.iitk.ac.in/users/swarnendu/}{Prof. Swarnendu Biswas}} % You supervisor1's name - this is used in the title page
+\supervisorB{\href{https://www.cse.iitk.ac.in/users/swarnendu/}{Prof. Swarnendu Biswas}} % You supervisor2's name - this is used in the title page
 %-------------------------------------------------   
 \examiner{} % Your examiner's name - this is not currently used anywhere in the template, cite it with \examname if you want it
 %-------------------------------------------------   
@@ -277,7 +275,7 @@
       \smallskip
       {\LARGE \authornames \par}
       \vfill
-      {\large A thesis submitted in partial fulfillment for the \par}
+      {\large A thesis submitted in partial fulfilment for the \par}
       {\large degree of \degreename \par}
       \bigskip
       \bigskip
@@ -323,7 +321,7 @@
     \bigskip
     \HRule \\[0.4cm] % Horizontal line
 		Name of the student:	 \textbf{\authornames}	\hfill Roll No: \textbf{208070710} \\
-		Degree for which submitted:  \textbf{BT-MT} \hfill Department:  \textbf{CHE Department} \\
+		Degree for which submitted:  \textbf{BT-MT} \hfill Department:  \textbf{CHE} \\
 		Thesis title: \textbf{\@title}\\
 		Thesis supervisors:  \textbf{\supnameA} and \textbf{\supnameB}\\
 		Month and year of thesis submission: \textbf{{\large \today}\\[0.4cm] }
@@ -408,7 +406,6 @@
 %    \cleardoublepage
 }
 
-
 \newcommand\listnomenclature{Symbols}
 \usepackage{longtable}
 \newcommand\listofnomenclature[2]{
@@ -421,7 +418,6 @@
     \cleardoublepage
 }
 
-
 \newcommand\listconstants{Physical Constants}
 \usepackage{longtable}
 \newcommand\listofconstants[2]{
@@ -433,8 +429,6 @@
 \begin{longtable}[c]{#1}#2\end{longtable}\par
     \cleardoublepage
 }
-
-
 
 \newcommand\acknowledgements[1]{
 \btypeout{Acknowledgements}
@@ -458,9 +452,6 @@
 \vfil\vfil\null
 %\cleardoublepage
 }
-
-
-
 
 \newcommand\dedicatory[1]{
 \btypeout{Dedicatory}

@@ -1,22 +1,21 @@
-% Chapter Template
-
-\chapter{Title of Chapter Seven}
+\chapter{Numerical Evaluation: Accuracy and Efficiency}
 
 \label{Chapter7} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 
-\lhead{Chapter 7. \emph{Title of Chapter Seven}}
-
-\section{Background}
-
-\lipsum[1]
-
-\section{Results}
-
-\subsection{Line profile analysis of XRD}
-\lipsum[1]
+\lhead{Chapter 7. \emph{Numerical Evaluation: Accuracy and Efficiency}}
+Simulations run on 12\textsuperscript{th} Gen Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500~$\times$~12 core processor
+\section{Convergence}
+We took a system of 10,000 Na and Cl ions in a 25 \AA box for our benchmarking. Based on our analysis for various gamma values, we calculated the reciprocal space energies for a given system and checked for the convergence of the sum. 
+% \begin{figure}[htbp]
+\begin{figure}[]
+    \centering
+    \includegraphics[scale=0.4]{images/logerror_vs_kz_forreport.jpg}
+    \caption{Convergence of relative errors in $U_{LR}$ with $k_z$ for various values of $\gamma$.}
+    \label{fig:result1}
+\end{figure}
+\section{Particle Mesh Ewald-Modified}
+\section{Performance Scaling}
+\subsection{Size Increase}
+\subsection{Multi-threading}
 
 \section{Summary}
-In the present work, large strain deformation was given via plane strain compression understand the deformation behavior of the Ni-24W-22Fe alloy. The most important findings of the present work are summarized below.
-\begin{enumerate}
-    \item \lipsum[1]    
-\end{enumerate}
