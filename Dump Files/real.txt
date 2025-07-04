@@ -1,0 +1,13 @@
+Function real(PosIons, ion_charges, natoms, betaa, box, cutoff):
+    Initialize real_energy to 0
+
+    (Optionally use parallelization if supported)
+
+    For i from 0 to natoms - 1:
+        For j from 0 to i - 1:
+            modR = distance between ion i and ion j, considering box
+            If modR > cutoff:
+                Continue to next iteration
+            real_energy += (charge of ion i * charge of ion j * erfc(betaa * modR)) / modR
+
+    Return real_energy

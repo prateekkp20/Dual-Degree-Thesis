@@ -1,7 +1,14 @@
-\chapter{Title of Chapter Five}
-
+\chapter{Implementation}
 \label{Chapter6}
+\lhead{Chapter 5. \emph{Implementation}}
 
-\lhead{Chapter 5. \emph{Title of Chapter Five}}
+\section{Reciprocal Space}
 
-\lipsum[2]
+\subsection{Kawata et al.}
+For the reciprocal summation, the structure factor has been reformulated as
+\begin{flalign*}
+    S(\vec{K},h) &= \sum_{t_x = 0}^{G_x-1} \sum_{t_y = 0}^{G_y-1} \sum_{j = 1}^{N} q_j X_{j,t_x} Y_{j,t_y} \left(\sum_{t_z = -\infty}^{\infty} Z_{j,t_z}exp(iht_z)\right) exp\left( i \frac{2\pi k_x t_x}{G_x} + i \frac{2\pi k_y t_y}{G_y}\right)\\
+    S(\vec{K},h) &= \sum_{t_x = 0}^{G_x-1} \sum_{t_y = 0}^{G_y-1} A_h(t_x,t_y)exp\left( i \frac{2\pi k_x t_x}{G_x} + i \frac{2\pi k_y t_y}{G_y}\right)\\
+    S(\vec{K},h) &= \mathcal{F}_{2D}\,[A_h(t_x,t_y)]
+\end{flalign*}
+\subsection{New Algorithm}

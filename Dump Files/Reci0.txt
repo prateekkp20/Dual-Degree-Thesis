@@ -1,0 +1,30 @@
+**Algorithm**: RECI0  
+**Input**:  
+- A matrix `PosIons[1..n][1..3]`, where `PosIons[i]` contains the coordinates of ion `i`  
+- An array `ion_charges[1..n]`, where `ion_charges[i]` is the charge of ion `i`  
+- An integer `n`, the number of ions  
+- A real number `β` (betaa)  
+- A matrix `box[1..3][1..3]`, whose rows are the box vectors  
+
+**Output**:  
+- The reciprocal-space energy of the system
+
+---
+
+**1.** Initialize `energy ← 0`  
+**2.** For each dimension `d = 1` to `3`, compute  
+  `Length[d] ← sqrt(dotProduct(box[d], box[d], 3))`  
+**3.** **for** `i ← 1` to `n` **do**  
+    **for** `j ← 1` to `i-1` **do**  
+      `Δz ← PosIons[i][3] - PosIons[j][3]`  
+      `energy ← energy + ion_charges[i] * ion_charges[j] * F_0(Δz * β)`  
+**4.** Set  
+  `energy ← 2 * sqrt(π) * energy / (β * Length[1] * Length[2])`  
+**5.** **return** `energy`
+
+---
+
+**Notes:**  
+- `dotProduct(a, b, k)` computes the sum of products of vectors `a` and `b` of length `k`.  
+- `F_0` is a function (not detailed here) applied to the scaled distance along the z-axis.  
+- The computation is parallelized over index `i` in the actual implementation for performance, but the algorithm above presents the sequential logic.

@@ -200,7 +200,7 @@
 %	defined as \examname above so you cite it as \examname
 %----------------------------------------------------------------------------------------
 
-\thesistitle{Fast 2D Ewald Something} % Your thesis title - this is used in the title and abstract
+\thesistitle{A Novel Algorithm to Efficiently Compute Ewald Summation for Ionic Slab Geometries} % Your thesis title - this is used in the title and abstract
 %-------------------------------------------------  
 \supervisorA{\href{https://home.iitk.ac.in/~vagarwal/}{Prof. Vishal Agarwal}} % You supervisor1's name - this is used in the title page
 \supervisorB{\href{https://www.cse.iitk.ac.in/users/swarnendu/}{Prof. Swarnendu Biswas}} % You supervisor2's name - this is used in the title page

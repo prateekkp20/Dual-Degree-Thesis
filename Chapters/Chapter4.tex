@@ -1,10 +1,10 @@
 % Chapter Template
 
-\chapter{Development of a New Algorithm / Our Work}
+\chapter{Development of a New Algorithm}
 
 \label{Chapter4}
 
-\lhead{Chapter 4. \emph{Development of a New Algorithm / Our Work}} 
+\lhead{Chapter 4. \emph{Development of a New Algorithm}} 
 In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. To address this difference, the $m_z$ summation is retained as in the three-dimensional periodic system, and a top-hat function is introduced. This function serves to eliminate contributions from periodic images along the $z$-direction, effectively treating these images as non-existent.
 
 A vacuum is introduced within the unit cell along the $z$-axis, resulting in a total side length of $ L_z$. This length must satisfy the condition $L_z \geq 2L$, where $L$ is the side length of the original simulation box. This condition ensures that the vacuum region is large enough to prevent atoms from adjacent periodic images from interacting with the original cell. Such interactions can lead to artificial periodic effects that would compromise the accuracy of the simulation.
@@ -39,12 +39,12 @@ Other forms of the top-hat functions can also be used; some examples are as foll
 \end{flalign}
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.7\linewidth]{images/TopHat2.png}
+    \includegraphics[width=0.8\linewidth]{images/TopHat2.png}
     \caption{Visualisation of the top-hat function for different $\gamma$. As $\gamma$ increases, the function transitions more sharply at the boundaries, approaching an ideal window function.}
     % \parbox{0.5\linewidth}{\justifying \caption{Visualization of top-hat function for different $\gamma$. As $\gamma$ increases, the function transitions more sharply at the boundaries, approaching an ideal window function.}}
     \label{fig:tophat}
 \end{figure}
-\section{Incorporating the top-hat function}
+\section{Incorporating the top-hat function (\textit{Name of the algo})}
 To evaluate the long-range contribution to the electrostatic energy in a two-dimensional (2D) periodic system, the derivation begins with the standard three-dimensional (3D) Ewald summation expression. A top-hat function, denoted by $\phi(z)$, is introduced to eliminate the influence of periodic images along the non-periodic $z$-direction. This function ensures that only the real physical interactions in the $z$-direction are retained, effectively reducing the system to 2D while preserving the 3D summation structure.
 
 The long-range part of the Coulomb interaction, initially expressed as $\frac{\text{erf}(\alpha r)}{r}$, is converted into an integral form using the identity:

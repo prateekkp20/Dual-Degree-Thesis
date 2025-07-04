@@ -1,0 +1,77 @@
+**PM2DEwald(PosIons, ion_charges, natoms, betaa, box, Grid, M, n)**  
+// Calculates reciprocal space energy using a new method
+
+1.  Allocate 2D arrays `u[1..natoms][1..3]`, `x_direc[1..natoms][1..Grid[0]]`, `y_direc[1..natoms][1..Grid[1]]`, `z_direc[1..natoms][1..Grid[2]]`
+2.  Set `L1 ← box[0][0]`
+3.  Set `L2 ← box[1][1]`
+4.  Set `L3 ← box[2][2]`
+5.  Set `n_max ← 1`
+6.  Allocate complex arrays `in[0..Grid[0]-1][0..Grid[1]-1][0..Grid[2]-1]` and `out[0..Grid[0]-1][0..Grid[1]-1][0..Grid[2]-1]` initialized to zero
+7.  Create FFT plan `p` for 3D forward transform on `in`, output to `out`
+
+// Calculate fractional coordinates
+8.  **for** `i ← 0` **to** `natoms−1` **do**
+9.      **for** `j ← 0` **to** `2` **do**
+10.         Let `x[1..3] ← [PosIons[3*i], PosIons[3*i+1], PosIons[3*i+2]]`
+11.         Set `u[i][j] ← Grid[j] * dotProduct(x, G[j], 3)`
+
+// Calculate Q-matrix coefficients in each direction
+12. **for** `i ← 0` **to** `natoms−1` **do**
+13.     **for** `k1 ← 0` **to** `Grid[0]−1` **do**
+14.         `x_direc[i][k1] ← 0`
+15.         **for** `n1 ← −n_max` **to** `n_max` **do**
+16.             `x_direc[i][k1] ← x_direc[i][k1] + M_n(u[i][0]−k1−n1*Grid[0], n[0])`
+17.     **for** `k2 ← 0` **to** `Grid[1]−1` **do**
+18.         `y_direc[i][k2] ← 0`
+19.         **for** `n2 ← −n_max` **to** `n_max` **do**
+20.             `y_direc[i][k2] ← y_direc[i][k2] + M_n(u[i][1]−k2−n2*Grid[1], n[1])`
+21.     **for** `k3 ← 0` **to** `Grid[2]−1` **do**
+22.         `z_direc[i][k3] ← 0`
+23.         **for** `n3 ← −n_max` **to** `n_max` **do**
+24.             `z_direc[i][k3] ← z_direc[i][k3] + M_n(u[i][2]−k3−n3*Grid[2], n[2])`
+
+// Initialize input array to zero (already done in allocation above, repeat for clarity)
+25. **for** `tx ← 0` **to** `Grid[0]−1` **do**
+26.     **for** `ty ← 0` **to** `Grid[1]−1` **do**
+27.         **for** `tz ← 0` **to** `Grid[2]−1` **do**
+28.             `in[tx][ty][tz] ← 0`
+
+// Build the final Q-matrix (charge assignment)
+29. **for** `j ← 0` **to** `natoms−1` **do**
+30.     **if** `ion_charges[j] = 0` **then continue**
+31.     **for** `tx ← 0` **to** `Grid[0]−1` **do**
+32.         **if** `x_direc[j][tx] = 0` **then continue**
+33.         **for** `ty ← 0` **to** `Grid[1]−1` **do**
+34.             **if** `y_direc[j][ty] = 0` **then continue**
+35.             **for** `tz ← 0` **to** `Grid[2]−1` **do**
+36.                 **if** `z_direc[j][tz] = 0` **then continue**
+37.                 `in[tx][ty][tz][REAL] ← in[tx][ty][tz][REAL] + ion_charges[j] * x_direc[j][tx] * y_direc[j][ty] * z_direc[j][tz]`
+
+// Run FFT
+38. Execute FFTW plan `p` on `in`, store result in `out`
+39. Destroy FFTW plan `p` and cleanup
+
+// Compute energy
+40. `energy ← 0`
+41. **for** `i ← −M[0]` **to** `M[0]` **do**
+42.     **for** `j ← −M[1]` **to** `M[1]` **do**
+43.         **for** `k ← −M[2]` **to** `M[2]` **do**
+44.             **if** `i = 0` **and** `j = 0` **and** `k = 0` **then continue**
+45.             Compute `ii, jj, kk` as wrapped grid indices for `i, j, k`
+46.             Compute `ic, jc, kc` as shifted indices for exponential factor lookup
+47.             `temp ← ii * (Grid[2] * Grid[1]) + jj * Grid[2] + kk`
+48.             `tempexpfactor ← ic * ((2*M[1]+1) * (2*M[2]+1)) + jc * (2*M[2]+1) + kc`
+49.             `norm_FQ ← out[temp][REAL]^2 + out[temp][IMAG]^2`
+50.             `energy ← energy + norm_FQ * ExpFactorInterpolated[tempexpfactor]`
+
+51. **return** `energy * sqrt(π) / (L1 * L2)`
+
+---
+
+**Notes:**
+- `dotProduct(x, G[j], 3)` is assumed to compute the dot product of two 3D vectors.
+- `M_n` is a function for B-spline interpolation.
+- `ExpFactorInterpolated` is assumed to be a precomputed array of exponential factors.
+- Real/imaginary parts for complex arrays are referenced by `[REAL]` and `[IMAG]`.
+- Array and loop indices are written in a zero-based style to match the C++ code.
+- Memory deallocation (e.g., `delete` or `fftw_free`) is omitted for brevity, as pseudocode in CLRS style generally focuses on computational steps.

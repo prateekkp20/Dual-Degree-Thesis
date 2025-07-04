@@ -1,0 +1,34 @@
+**Procedure** **INTEGRAND-RECIPROCAL**(h, params)
+
+1. Unpack params into (PosIons, ion_charges, natoms, betaa, box, K)
+2. Let Length[0] ← √(dotProduct(box[0], box[0], 3))
+  Let Length[1] ← √(dotProduct(box[1], box[1], 3))
+  Let Length[2] ← √(dotProduct(box[2], box[2], 3))
+3. reciprocal_energy_i ← 0
+4. **for** k ← −K **to** K **do**
+5.  **for** l ← −K **to** K **do**
+6.   **if** k = 0 and l = 0 **then** continue
+7.   s_kh ← 0 (complex)
+8.   G[0] ← (2πk) / Length[0]
+   G[1] ← (2πl) / Length[1]
+   G[2] ← h
+9.   **for** i ← 0 **to** natoms − 1 **do**
+10.    G_dot_r ← G[0]·PosIons[i][0] + G[1]·PosIons[i][1] + G[2]·PosIons[i][2]
+11.    charge ← ion_charges[i] (as complex)
+12.    s_kh ← s_kh + charge × (cos(G_dot_r) + i·sin(G_dot_r))
+13.   norm_sg ← norm(s_kh)
+14.   norm_g ← G[0]² + G[1]² + G[2]²
+15.   reciprocal_energy_i ← reciprocal_energy_i + (norm_sg / (norm_g × exp(norm_g / (4 × betaa²))))
+16. reciprocal_energy_i ← reciprocal_energy_i / (Length[0] × Length[1])
+17. **return** reciprocal_energy_i
+
+---
+
+**Procedure** **RECIPROCAL-KAWATA**(PosIons, ion_charges, natoms, betaa, box, K)
+
+1. Create GSL integration workspace
+2. Set F.function ← INTEGRAND-RECIPROCAL
+3. Set F.params ← (PosIons, ion_charges, natoms, betaa, box, K)
+4. Integrate F over h from −∞ to ∞, with desired tolerance, store in result
+5. Free GSL integration workspace
+6. **return** result
