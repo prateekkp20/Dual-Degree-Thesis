@@ -3,6 +3,10 @@
 \label{Chapter7} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 
 \lhead{Chapter 7. \emph{Numerical Evaluation: Accuracy and Efficiency}}
+% We performed experiments on a machine with 4 Intel Xeonr
+% Quad-core E7320 processors and 16 GB memory. The operating
+% system was Fedora release 9 with kernel 2.6.25. The compiler was
+% gcc 4.3.0
 Calculations were performed on 12\textsuperscript{th} Gen Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500~$\times$~12 core processor
 we evaluated the computational efficiency and accuracy of our algorithm and compared it with PHL ewald and also with the method given by kawata et al.
 The dimentions of the system were $L_x = L_y = L_z = 25$ \AA . The configuration of the systems were generated randomly using LAMMPS.
@@ -42,19 +46,7 @@ The of the interpolation function gave around 15\% improvement in the calculatio
     \caption{Enter Caption}
     \label{fig:enter-label}
 \end{figure}
-\subsection{Parallel Efficiency via Multi-threading}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/threadstimetotal.jpg}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/threadstimeSPMEtotal.jpg}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
+% \subsection{Parallel Efficiency via Multi-threading}
 SPME configuration
 gx = 64 
 gy = 64

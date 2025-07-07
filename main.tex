@@ -1,27 +1,56 @@
 \documentclass[11pt, a4paper, oneside]{Thesis} % Paper size, default font size and one-sided paper
 % \usepackage{floatrow}
 % \floatsetup[table]{capposition=top}
-\usepackage{textcomp}
-\usepackage{wrapfig}
-\usepackage{lscape}
-\usepackage{blindtext}
-\usepackage{rotating}
-\usepackage[english]{babel}
-\usepackage{romannum}
-\usepackage[most]{tcolorbox}
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage{amsmath}
-\usepackage{upgreek}
-\usepackage{gensymb}
-\usepackage{csquotes}
-\usepackage{pdfpages}
-\usepackage{lipsum}
-\usepackage{notoccite}
-\usepackage{float}
-\usepackage{ragged2e}
 \usepackage{algorithm2e}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+\usepackage{caption,subcaption}
+\usepackage{csquotes}
+\usepackage{float}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{listings,xcolor}
+\usepackage{lipsum}
+\usepackage{lscape}
+\usepackage{multicol}
+\usepackage{notoccite}
+\usepackage{pdfpages}
+\usepackage{ragged2e}
+\usepackage{romannum}
+\usepackage{rotating}
+\usepackage{tabularx}
+\usepackage{textcomp}
+\usepackage[most]{tcolorbox}
+\usepackage{upgreek}
+\usepackage{wrapfig}
 \RestyleAlgo{ruled}
+\usepackage{xcolor}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstset{
+    language=C,
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    % keywordstyle=\color{blue},
+    % commentstyle=\color{gray},
+    % stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    captionpos=b
+}
 \renewcommand{\chapterautorefname}{Chapter} % Forces capital "Chapter"
 %\usepackage[open]{bookmark}
 
@@ -77,7 +106,7 @@
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % New command to make the lines in the title page
 
-% PDF meta-data
+% PDF metadata
 \hypersetup{pdftitle={\ttitle}}
 \hypersetup{pdfsubject=\subjectname}
 \hypersetup{pdfauthor=\authornames}
@@ -124,7 +153,7 @@
 \Declaration{\addtocontents{toc}{\vspace{1em}}} % Add a gap in the Contents, for aesthetics
 \setcounter{page}{2}
 
-\begin{minipage}{1.03\textwidth}
+\begin{minipage}{1.0\textwidth}
     
     It is certified that the work contained in this thesis entitled \textbf{\enquote{\ttitle}} by \textbf{\authornames} has been carried out under my supervision and that it has not been submitted elsewhere for a degree.
         
@@ -132,36 +161,20 @@
 
 \vspace{45mm}
 
-\begin{tabular}{@{}p{0.48\textwidth}@{}p{0.55\textwidth}@{}}
+\begin{tabular}{@{}p{0.465\textwidth}@{}p{0.535\textwidth}@{}}
     \textbf{Prof. Vishal Agarwal} & \textbf{Prof. Swarnendu Biswas} \\
     Associate Professor & Assistant Professor \\
     Department of Chemical Engineering & Department of Computer Science \& Engineering \\
     Indian Institute of Technology Kanpur & Indian Institute of Technology Kanpur \\
 \end{tabular}
 
-% \begin{minipage}{0.5\textwidth}
-% 		\begin{flushleft}
-% 			{\supnameA\\ 
-% 			Associate Professor\\
-% 			\deptname\\
-% 			\univname}
-% 		\end{flushleft}
-% \end{minipage}
-% \begin{minipage}{0.5\textwidth}
-% 	\begin{flushleft} 
-% 			{\supnameB\\
-% 			Assistant Professor\\
-% 			\deptnameCSE\\
-% 			\univname}
-% 	\end{flushleft}		
-% \end{minipage}
 \vfill
 \clearpage % Start a new page
 \StudentDeclaration{\addtocontents{toc}{\vspace{1em}}} % Add a gap in the Contents, for aesthetics
 
 This is to certify that the thesis titled \textbf{``\ttitle''} has been authored by me. It presents the research conducted by me under the supervision of \textbf{\supnameA} and \textbf{\supnameB}.\par
 
-To the best of my knowledge, it is an original work, both in terms of research content and narrative, and has not been submitted elsewhere, in part or in full, for a degree. Further, due credit has been attributed to the relevant state-of-the-art and collaborations with appropriate citations and acknowledgements, in line with established norms and practices.\\ [2cm]
+To the best of my knowledge, it is an original work, both in terms of research content and narrative, and has not been submitted for a degree elsewhere, in part or in full. Further, due credit has been attributed to the relevant state-of-the-art collaborations with appropriate citations and acknowledgements, which are in line with established norms and practices.\\ [2cm]
 \begin{minipage}{.5\textwidth}
 		\begin{flushleft}
 			{\authornames\\ Roll No. 208070710 \\
@@ -185,9 +198,11 @@ Accurate computation of long-range coulombic interactions is essential in molecu
 
 The Ewald method becomes more challenging for systems with reduced Periodicity, such as 2D slab geometries. These systems are periodic in two dimensions and finite in the third, which disturbs the overall symmetry essential for fast computation of Ewald summation. Traditional or modern approaches struggle with computational efficiency and accuracy for slab geometries. These methods often require complex corrections or approximations that render the simulations slower than 3D Ewald summation. 
 
-In this work, we propose a method of computing an exact 2D Ewald summation, which is more efficient than the 3D Ewald summation. Our approach utilises a modified screening function for the reciprocal space summation within the Particle-Mesh Ewald (PME) method. Using FFT for reciprocal space computations, our method achieves the same computational complexity, O($N\log N$), as the traditional 3D Ewald technique. These improvements provide a more efficient framework for simulating 2D periodic systems, significantly reducing computational expenses. 
+In this work, we propose a method of computing an exact 2D Ewald summation, which is more efficient than the 3D Ewald summation. Our approach utilizes a modified screening function for the reciprocal space summation within the Particle-Mesh Ewald (PME) method. Using FFT for reciprocal space computations, our method achieves the same computational complexity, O($N\log N$), as the traditional 3D Ewald technique. 
 
-By maintaining accuracy without compromising computational speed, our method offers a practical and efficient framework for large-scale molecular simulations, which will have implications for simulating 2D periodic systems found in surface science, material interfaces, and thin films.
+We also carried out a performance analysis of codes using the Intel\textsuperscript{\textregistered} VTune framework to identify performance bottlenecks and guide the optimization efforts. Special polynomial approximations were introduced for the real-space energy calculation to reduce the computational overheads without sacrificing accuracy. To further enhance the performance on multicore architectures, we parallelized the program using OpenMP, achieving a significant reduction in the runtime.
+
+These improvements provide a more efficient framework for simulating 2D periodic systems, significantly reducing computational expenses. By maintaining accuracy without compromising computational speed, our method offers a practical and efficient framework for large-scale molecular simulations, which will have implications for simulating 2D periodic systems found in surface science, material interfaces, and thin films.
 
 }
 
@@ -317,10 +332,10 @@ $\phi_d$ & Dihedral angle
 % Uncomment the lines as you write the chapters
 \clearpage
 \input{Chapters/Chapter1}
-\input{Chapters/Chapter2}
+% \input{Chapters/Chapter2}
 \input{Chapters/Chapter3}
 \input{Chapters/Chapter4}
-\input{Chapters/Chapter5}
+% \input{Chapters/Chapter5}
 \input{Chapters/Chapter6}
 \input{Chapters/Chapter7}
 \input{Chapters/Chapter8}

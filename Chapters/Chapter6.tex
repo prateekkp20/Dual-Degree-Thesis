@@ -4,7 +4,7 @@
 
 \label{Chapter6}
 
-\lhead{Chapter 6. \emph{Performance Analysis and Optimisation}}
+\lhead{Chapter 6. \emph{Performance Analysis and Optimization}}
 After implementing the new 2D Ewald summation algorithm, the subsequent objective was to identify performance bottlenecks in the program, as the next critical step in guiding further optimization efforts. Intel VTune Profiler was used for this purpose, as it provides detailed insights into the program’s execution by highlighting time-consuming functions, and parallelization inefficiencies.
 % \section{Performance Analysis using Intel VTune Profiler}
 \section{Baseline Program}
@@ -44,7 +44,9 @@ a_2 = -0.284496736,
 a_3 = 1.421413741, \\
 a_4 = -1.453152027, \\
 a_5 = 1.061405429.
-\]This polynomial was then used as a direct replacement for the standard \(\operatorname{erfc}(x)\) function within the real-space evaluation.
+\]
+The polynomial was subsequently adapted as a replacement for the standard $\operatorname{erfc}(x)$ function in the real-space evaluation. This approach is advantageous because $\operatorname{erfc}(x)$ is computationally more expensive than $\operatorname{exp}(x)$. The evaluation of $\operatorname{erfc}(x)$ requires complex numerical approximations to compute an integral that does not have a simple closed form. In contrast, $\operatorname{exp}(x)$ is simpler, optimized, and often directly supported by hardware, which makes it significantly faster to compute.
+
 \section{Additional Optimizations}
 \subsection{Array Flattening}
 In the implementation, data involving multiple dimensions must be stored in several parts of the program, such as atom positions and charge spreading array for the SPME. While multidimensional arrays are a natural choice for such data, they have drawbacks. 
@@ -59,7 +61,9 @@ This approach reduced overhead, improved memory locality, and allowed faster acc
 Vectorization enables the simultaneous processing of multiple data elements using a single instruction. This approach significantly improves both the speed and efficiency of computations. It is a fundamental technique in high-performance numerical computing, scientific simulations, graphics, and machine learning, as it leverages the SIMD (Single Instruction Multiple Data) capabilities present in modern processors.
 
 In this work, the program has been compiled using the flags \texttt{-O3}, \texttt{-mavx2}, \texttt{-march=native}, \texttt{-ftree-vectorize}, and \texttt{-ftree-vectorizer-verbose=1}. The \texttt{-O3} flag enables aggressive optimization, including automatic vectorization of loops. The \texttt{-mavx2} flag ensures that the generated code utilizes AVX2 instructions, which operate on 256-bit registers. This allows the simultaneous processing of 8 single-precision floating-point numbers or 4 double-precision floating-point numbers, thereby greatly accelerating loops and computation-intensive sections of the code.
-\section{Performance of Optimized Implementation}
+
+\section{Optimized Implementation}
+% \section{Performance of Optimized Implementation}
 Following the improvements, hotspot analysis of the optimized implementation Fig.~(\ref{fig:resultVTuneFinal}), shows a notable shift in the computational profile. The \texttt{\_\_erfc} function no longer appears among the major hotspots. The primary contributors to CPU time are now \texttt{dist} (35.4\%) and \texttt{real\_omp\_fn.0} (23.2\%), both associated with real-space computations. 
 % Detailed performance improvements are presented in the \textit{Numerical Analysis} section of the thesis.
 \begin{figure}[htbp]
@@ -80,22 +84,41 @@ Following the improvements, hotspot analysis of the optimized implementation Fig
     \end{minipage}
 \end{figure}
 
-\section{Parallelisation}
-% \subsubsection*{Real Space}
+\section{Parallelization}
+Parallel programming can have an enormous impact on the performance and scalability of computational applications. The motivation for parallelizing a code is to reduce its execution time, enabling it to run faster on modern multiprocessor systems. In this context, the Ewald summation algorithm is crucial, as it is computationally intensive. Depending on the specific component of the calculation, its computational complexity ranges from $O(N^2)$ to $O(NlogN)$, making it essential to accelerate through parallel techniques. Efficient parallelization is critical for simulating long-range interactions in order to study large-scale systems.
 
-% \subsubsection*{Reciprocal Space}
 \subsection{OpenMP}
-OpenMP is a shared-memory parallel programming standard that allows for step-by-step parallelization. It requires only minor changes to the original sequential code, making it easy to apply. Unlike other methods that need a supercomputer, OpenMP can provide speedup even on personal computers with two or more processor cores.
-\subsection{Reduction Clauses}
-\_\_restrict\_\_
+In Ewald summation, the majority of the execution time is spent in running \texttt{for} loops. These loops are best suited for parallelization using OpenMP, which can effectively distribute the workload across multiple threads to improve performance.
 
-\subsection{Race condition during Charge Spreading for SPME}
-A naïve implementation, which uses one thread to map the spread of each individual charge onto the grid, would encounter synchronization problems when different threads attempt to accumulate charge on the same grid location, thus necessitating the use of thread-safe atomic memory operations.
+OpenMP is a shared-memory parallel programming standard that allows for step-by-step parallelization. It requires only minor changes to the original sequential code, making it easy to apply. Unlike other methods that need a supercomputer, OpenMP can provide speed-up even on personal computers with two or more processor cores.
 
-During the computation of the charge spreading array $Q$, the contribution to each grid point is determined by the interpolation weights associated with each particle. In a parallel implementation, multiple threads may attempt to update the same grid point concurrently if the interpolation regions of different particles overlap. This leads to a \textit{race condition}, where the final value at a given grid point depends on the unpredictable timing of memory accesses by different threads. Some contributions may be overwritten or lost entirely without proper synchronization, resulting in incorrect results.
+\subsection{Implementation Details}
+\textbf{Reduction:} The \verb|reduction| clause is used to safely accumulate the result of a shared variable such as the real or the reciprocal energies. Each thread maintains a private copy of the reduction variable and they automatically combine that at the end of the parallel region using the specified reduction operator. An example of its application in the reciprocal space energy calculation is shown below
+\lstinputlisting[language=C]{CodeFiles/reduction.c}
 
-The \verb|atomic update| clause provided by OpenMP was employed to prevent this. It ensures that updates to a shared memory location are performed atomically, preventing simultaneous read/write operations by multiple threads and thereby eliminating the race condition.
-\subsection{Implementation Correctness}
+\textbf{Race condition during charge spreading:} A naïve approach that assigns one thread to map each charge onto the grid can lead to synchronization issues when multiple threads attempt to update the same grid point. During the computation of the charge spreading array $Q$, overlapping interpolation regions may cause several threads to modify the same grid location at the same time, resulting in a race condition and potentially incorrect values. To handle this, the \verb|atomic update| clause in OpenMP was used to ensure that updates are performed atomically, thereby preventing simultaneous read and write operations by different threads.
+\lstinputlisting[language=C]{CodeFiles/atomic.c}
 
-% the indexing line is taken from the fftw tutorial website.
-% https://www.fftw.org/fftw2_doc/fftw_2.html
+\textbf{Nested loops:} To parallelize the independent nested loops involved in the reciprocal space summation over the three-dimensional grids, the \texttt{collapse(3)} clause is employed. This directive flattens the nested loops into a single iteration space, thereby enhancing load balancing and facilitating uniform distribution of the computational workload across threads.
+\lstinputlisting[language=C]{CodeFiles/collapse.c}
+
+\subsection{Performance Evaluation}
+To assess the effectiveness of OpenMP based parallelization, a series of calculations were performed for varying system sizes. The execution times were recorded by varying the number of OpenMP threads from 1 to 23, examining the scalability of the program. The experiments were performed on a machine with a 12\textsuperscript{th} Gen Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500~$\times$~12 core processor. The operating system was OpenSUSE 15.5. The compiler was GCC 7.5.0.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Total simulation time for different thread counts for direct Ewald summation.]{%
+        \includegraphics[width=0.75\textwidth]{images/threadstimetotal.jpg}
+        \label{fig:thread-a}
+    }\\[1ex]
+    \subfigure[Total simulation time with SPME (grid: $64 \times 64 \times 512$, order: 8) across different thread counts.]{
+        \includegraphics[width=0.75\textwidth]{images/threadstimeSPMEtotal.jpg}
+        \label{fig:thread-b}
+    }
+    \caption{Comparison of threading performance.}
+    \label{fig:threading}
+\end{figure}
+
+The results show a significant reduction in the execution times with increasing threads, up to 12, which corresponds to the total cores in the system. Beyond this point, the performance gains plateau. This behaviour shows the potential of parallelization within the bounds of the available hardware and achieving higher gain on better hardware.  
+
+% \subsection{Implementation Correctness}
