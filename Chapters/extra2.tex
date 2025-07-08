@@ -2,7 +2,7 @@
 
 \chapter{Development of An Efficient 2D-Ewald Summation Method}
 
-\label{Chapter3}
+\label{Chapter4}
 
 \lhead{Chapter 3. \emph{Development of An Efficient 2D-Ewald Summation Method}} 
 In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. In this chapter, we propose to retain this summation as in the three-dimensional periodic system, and introduce a top-hat function in the ``screening'' term of the reciprocal sum, which acts as a filter for removing the contributions that are not from 2D-Ewald summation. This function is set up in such a way that it eliminates contribution from periodic images along the $z$-direction, while retaining the efficiency of 3D-Ewald summation in the reciprocal space. 

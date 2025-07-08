@@ -59,6 +59,8 @@
 \usepackage{array}
 \newcolumntype{L}{>{\centering\arraybackslash}m{3cm}}
 
+\newcommand{\swb}[1]{\noindent \textcolor{blue}{{\bf SB: }{\em #1}} }
+
 %\usepackage[acronym]{glossaries}
 % prints author names as small caps
 
@@ -194,13 +196,13 @@ To the best of my knowledge, it is an original work, both in terms of research c
 
 \abstract{\addtocontents{toc}{\vspace{1em}} % Add a gap in the Contents, for aesthetics
 
-Accurate computation of long-range coulombic interactions is essential in molecular simulations, as they dominate other interactions, such as van der Waals. However, calculating these interactions can be computationally expensive, particularly for large-scale systems. Large-scale systems are typically modelled as a small simulation cell periodically repeated in all three dimensions. The traditional Ewald summation\cite{Ewald1921, Brooks1989} addresses the challenge of computing Coulombic interaction with complete 3D Periodicity. It splits the Coulomb potential into two parts: a short-range component handled in real space and a long-range component in reciprocal space using Fourier transforms. The short-range part rapidly converges, while the long-range part uses Fast Fourier Transform (FFT) and interpolation techniques, which scale as O($N\log N$) time complexity, where $N$ is the number of charged ions.
+Accurate computation of long-range coulombic interactions is essential in molecular simulations, as they dominate other interactions, such as van der Waals. However, calculating these interactions can be computationally expensive, particularly for large-scale systems. Large-scale systems are typically modelled as a small simulation cell periodically repeated in all three dimensions. The traditional Ewald summation~\cite{Ewald1921, Brooks1989} addresses the challenge of computing Coulombic interaction with complete 3D Periodicity. It splits the Coulomb potential into two parts: a short-range component handled in real space and a long-range component in reciprocal space using Fourier transforms. The short-range part rapidly converges, while the long-range part uses Fast Fourier Transform (FFT) and interpolation techniques, which scale as O($N\log N$) time complexity, where $N$ is the number of charged ions.
 
-The Ewald method becomes more challenging for systems with reduced Periodicity, such as 2D slab geometries. These systems are periodic in two dimensions and finite in the third, which disturbs the overall symmetry essential for fast computation of Ewald summation. Traditional or modern approaches struggle with computational efficiency and accuracy for slab geometries. These methods often require complex corrections or approximations that render the simulations slower than 3D Ewald summation. 
+The Ewald method becomes more challenging for systems with reduced periodicity, such as 2D slab geometries. These systems are periodic in two dimensions and finite in the third, which disturbs the overall symmetry essential for fast computation of Ewald summation. Traditional or modern approaches struggle with computational efficiency and accuracy for slab geometries. These methods often require complex corrections or approximations that render the simulations slower than 3D Ewald summation. 
 
 In this work, we propose a method of computing an exact 2D Ewald summation, which is more efficient than the 3D Ewald summation. Our approach utilizes a modified screening function for the reciprocal space summation within the Particle-Mesh Ewald (PME) method. Using FFT for reciprocal space computations, our method achieves the same computational complexity, O($N\log N$), as the traditional 3D Ewald technique. 
 
-We also carried out a performance analysis of codes using the Intel\textsuperscript{\textregistered} VTune framework to identify performance bottlenecks and guide the optimization efforts. Special polynomial approximations were introduced for the real-space energy calculation to reduce the computational overheads without sacrificing accuracy. To further enhance the performance on multicore architectures, we parallelized the program using OpenMP, achieving a significant reduction in the runtime.
+We also carried out a performance analysis of codes using the Intel\textsuperscript{\textregistered} VTune framework to identify performance bottlenecks and guide the optimization efforts. Special polynomial approximations were introduced for the real-space energy calculation to reduce the computational overheads without sacrificing accuracy. To further enhance the performance on multicore architectures, we parallelized the program using OpenMP, achieving a significant reduction in the runtime.@@@Rewrite@@@
 
 These improvements provide a more efficient framework for simulating 2D periodic systems, significantly reducing computational expenses. By maintaining accuracy without compromising computational speed, our method offers a practical and efficient framework for large-scale molecular simulations, which will have implications for simulating 2D periodic systems found in surface science, material interfaces, and thin films.
 
@@ -220,7 +222,7 @@ These improvements provide a more efficient framework for simulating 2D periodic
 \lhead{\emph{Acknowledgements}}
 \acknowledgements{\addtocontents{toc}{\vspace{1em}} % Add a gap in the Contents, for aesthetics
 
-\lipsum[1]
+Acknowledgements
 
 }
 \clearpage % Start a new page
@@ -280,7 +282,10 @@ Speed of Light & $c$ & $=$ & $2.997\ 924\ 58\times10^{8}\ \mbox{ms}^{-\mbox{s}}$
 {
 % Symbol & Name & Unit \\
 $C_g$ & contiguity \\
-$\phi_d$ & Dihedral angle
+$\phi_d$ & Dihedral angle \\
+$U^{LR}$ & Ewald Energy for Reciprocal (Long-Range) Space \\ 
+$U^{SR}$ & Ewald Energy for Real (Short-Range) Space \\ 
+$U^{S}$ & Self Interaction Correction to Ewald Energy \\ 
 }
 
 % \ListofPublications{\addtocontents{toc}{\vspace{1em}} % Add a gap in the Contents, for aesthetics
@@ -332,13 +337,13 @@ $\phi_d$ & Dihedral angle
 % Uncomment the lines as you write the chapters
 \clearpage
 \input{Chapters/Chapter1}
-% \input{Chapters/Chapter2}
+\input{Chapters/Chapter2}
 \input{Chapters/Chapter3}
 \input{Chapters/Chapter4}
-% \input{Chapters/Chapter5}
+\input{Chapters/Chapter5}
 \input{Chapters/Chapter6}
-\input{Chapters/Chapter7}
-\input{Chapters/Chapter8}
+% \input{Chapters/Chapter7}
+% \input{Chapters/Chapter8}
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - APPENDICES
 %----------------------------------------------------------------------------------------
@@ -348,7 +353,7 @@ $\phi_d$ & Dihedral angle
 % Include the appendices of the thesis as separate files from the Appendices folder
 % Uncomment the lines as you write the Appendices
 
-%\input{Appendices/AppendixA}
+\input{Appendices/AppendixA}
 %\input{Appendices/AppendixB}
 %\input{Appendices/AppendixC}
 

@@ -1,138 +1,133 @@
 % Chapter Template
 
-\chapter{Development of a New Algorithm}
+\chapter{Performance Analysis and Optimization}
 
 \label{Chapter4}
 
-\lhead{Chapter 4. \emph{Development of a New Algorithm}} 
-In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. To address this difference, the $m_z$ summation is retained as in the three-dimensional periodic system, and a top-hat function is introduced. This function serves to eliminate contributions from periodic images along the $z$-direction, effectively treating these images as non-existent.
+\lhead{Chapter 4. \emph{Performance Analysis and Optimization}}
+After implementing the new 2D Ewald summation algorithm, the subsequent objective was to identify performance bottlenecks in the program, as the next critical step in guiding further optimization efforts. Intel VTune Profiler was used for this purpose, as it provides detailed insights into the program’s execution by highlighting time-consuming functions, and parallelization inefficiencies.
+% \section{Performance Analysis using Intel VTune Profiler}
 
-A vacuum is introduced within the unit cell along the $z$-axis, resulting in a total side length of $ L_z$. This length must satisfy the condition $L_z \geq 2L$, where $L$ is the side length of the original simulation box. This condition ensures that the vacuum region is large enough to prevent atoms from adjacent periodic images from interacting with the original cell. Such interactions can lead to artificial periodic effects that would compromise the accuracy of the simulation.
-\section{Top-hat function}
-\begin{figure}[]% if you want to fix the position of this image, add H inside the []
+\swb{Write a few more lines justifying our choice with VTune. Also, list a few different program analyses that VTune supports. Tell readers what is analysed in hotspot analysis and what is the expected output.}
+
+\section{Baseline Program}
+
+\swb{It seems we need to briefly describe the implementation before we talk about profiling it.}
+
+Hotspot analysis of the program was performed to identify computational bottlenecks. The results in Fig.~(\ref{fig:result1vtune}), indicate that the real-space component accounts for approximately 60-65\% of the total CPU time. The most expensive function was \texttt{dist}, responsible for inter-particle distance calculations, consuming around 25\% of the execution time. This cost is compounded by repeated calls to the \texttt{\_\_erfc} function from \texttt{libm-2.31.so}, contributing approximately 20\% of the total runtime. These findings highlight the need to optimize the real-space calculations, particularly the error function evaluation, to improve overall performance.
+
+\swb{What is \texttt{libm}?}
+
+% \begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{images/simulationcell.jpg}
-    \caption{insert some caption}
-    \label{fig:simulation_cell}
+    \begin{minipage}{0.7\textwidth}
+        \fbox{\includegraphics[width=\linewidth]{images/VTuneInitialTime.png}}
+    \end{minipage}%
+    \begin{minipage}{0.3\textwidth}
+        \caption{Execution time details for baseline program.}
+    \end{minipage}
+\end{figure}
+% \begin{figure}[htbp]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width = \linewidth]{images/VTuneInitialHotspot.png}
+    \caption{Hotspot analysis of the baseline Ewald summation implementation, as reported by Intel VTune Profiler. A significant portion of total CPU time is concentrated in the \textit{dist} function (25.8\%), the standard math library's \textit{\_\_erfc} function (19.4\%).}
+    \label{fig:result1vtune}
 \end{figure}
 
-To exclude the system's interactions along the $z$-direction, a spatially dependent window function $\phi(z)$ is introduced. The simplest version of $\phi(z)$ is a top-hat function defined as:
-\begin{flalign*} 
-    \phi(z) = 
-    \begin{cases} 
-        1 & \text{if } z \in (-\frac{L_z}{2}, \frac{L_z}{2}) \\
-        0 & \text{otherwise}
-    \end{cases}
-\end{flalign*}
+\section{Polynomial Interpolation of Error Function}
+A significant portion of the program’s execution time was consumed by calls to the \verb|std::erfc| function. To reduce the computational cost associated with evaluating the complementary error function \(\operatorname{erfc}(x)\) in the real-space part of the Ewald summation, a polynomial interpolation approach was adopted. This technique is outlined in \textit{Handbook of Mathematical Functions by Abramowitz and Stegun (1964)}. The expression used is
+\begin{equation}  
+    erf(x) = 1 - (a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5) e^{-x^2} + \epsilon(x)
+\end{equation}
+\[
+    t = \frac{1}{1 + px}, \quad |\epsilon(x)| \leq 1.5 \times 10^{-7},
+\]
+\[
+p = 0.3275911, \\
+a_1 = 0.254829592, \\
+a_2 = -0.284496736,
+\]
+\[
+a_3 = 1.421413741, \\
+a_4 = -1.453152027, \\
+a_5 = 1.061405429.
+\]
+The polynomial was subsequently adapted as a replacement for the standard $\operatorname{erfc}(x)$ function in the real-space evaluation. This approach is advantageous because $\operatorname{erfc}(x)$ is computationally more expensive than $\operatorname{exp}(x)$. The evaluation of $\operatorname{erfc}(x)$ requires complex numerical approximations to compute an integral that does not have a simple closed form. In contrast, $\operatorname{exp}(x)$ is simpler, optimized, and often directly supported by hardware, which makes it significantly faster to compute.
 
-While this function is straightforward, its sharp discontinuities at the edges can introduce numerical artefacts, especially in methods sensitive to derivatives or smoothness (e.g., force field calculations). To address this, the discontinuous top-hat function is replaced with a smooth approximation that retains the essential features of the original function while providing a differentiable and numerically stable function.
-The smoothed version of $\phi(z)$ is expressed as:
-\begin{flalign}
-    \phi(z) &= \frac{1}{1+ exp(-\gamma(0.5L_z+z))} + \frac{1}{1+ exp(-\gamma(0.5L_z-z))} -1 \label{eq:1}
-\end{flalign}
+\section{Additional Optimizations}
+\subsection{Array Flattening}
+In the implementation, data involving multiple dimensions must be stored in several parts of the program, such as atom positions and charge spreading array for the SPME. While multidimensional arrays are a natural choice for such data, they have drawbacks. 
 
-This function uses a linear combination of two sigmoid functions to make a symmetrical top-hat function about the origin. The positive constant \textbf{$\gamma$} determines the steepness of the top-hat around the edges. The behaviour of $\phi(z)$ Eq. (\ref{eq:1}) is shown in Fig. (\ref{fig:tophat}).
-Other forms of the top-hat functions can also be used; some examples are as follows:
-\begin{flalign}
-        \phi(z) &= \frac{1}{2}[ \tanh(\gamma(x + 0.5L)) -\tanh(\gamma(x - 0.5L)) ] \\
-        \phi(z) &= \frac{2}{\pi}\left[ \arctan \left( e^{\gamma (-x + 0.5L)} \right) + \arctan \left( e^{\gamma (x + 0.5L)} \right) \right]- 1 
-\end{flalign}
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.8\linewidth]{images/TopHat2.png}
-    \caption{Visualisation of the top-hat function for different $\gamma$. As $\gamma$ increases, the function transitions more sharply at the boundaries, approaching an ideal window function.}
-    % \parbox{0.5\linewidth}{\justifying \caption{Visualization of top-hat function for different $\gamma$. As $\gamma$ increases, the function transitions more sharply at the boundaries, approaching an ideal window function.}}
-    \label{fig:tophat}
-\end{figure}
-\section{Incorporating the top-hat function (\textit{Name of the algo})}
-To evaluate the long-range contribution to the electrostatic energy in a two-dimensional (2D) periodic system, the derivation begins with the standard three-dimensional (3D) Ewald summation expression. A top-hat function, denoted by $\phi(z)$, is introduced to eliminate the influence of periodic images along the non-periodic $z$-direction. This function ensures that only the real physical interactions in the $z$-direction are retained, effectively reducing the system to 2D while preserving the 3D summation structure.
-
-The long-range part of the Coulomb interaction, initially expressed as $\frac{\text{erf}(\alpha r)}{r}$, is converted into an integral form using the identity:
-$$
-\frac{\text{erf}(\alpha r)}{r} = \frac{2}{\sqrt{\pi}} \int_0^\alpha e^{-r^2 t^2} dt.
-$$
-This transformation separates the exponential term into components along the $x$, $y$, and $z$ directions.
-\begin{flalign}
-    \nonumber(4\pi\epsilon_o)U^{LR} & = \frac{1}{2}\sum_{\vec{M}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}q_i q_j \frac{{erf}(\alpha|\vec{r_i}-\vec{r_j}+\vec{M}.\vec{L}|)}{|\vec{r_i}-\vec{r_j}+\vec{M}.\vec{L}|} \,\phi(z_{ij}+m_zL_z)\quad\quad\quad\quad
-\end{flalign}
-\begin{flalign}
-    \nonumber\quad\quad\quad\quad\quad& = \frac{1}{2}\sum_{\vec{M}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}\frac{2q_i q_j}{\sqrt{\pi}}\int_{0}^{\alpha}dt\,  {exp}(-|\vec{r_i}-\vec{r_j}+\vec{M}.\vec{L}|^2 t^2)\,\phi(z_{ij}+m_zL_z)\\
-    \nonumber &=\frac{1}{2}\sum_{\vec{M}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}\frac{2q_i q_j}{\sqrt{\pi}}\int_{0}^{\alpha}dt\,  {exp}\left[-(x_{ij}+m_xL_x)^2 t^2\right] \\
-    &\quad\quad\quad\times{exp}\left[-(y_{ij}+m_yL_y)^2 t^2\right]\times{exp}\left[-(z_{ij}+m_zL_z)^2 t^2\right] \, \phi(z_{ij}+m_zL_z)
-\end{flalign}
-The Poisson summation formula is used to convert the expression from real space to reciprocal space. The detailed derivation of this transformation is provided in the \colorbox{yellow}{Appendix}.
-\begin{flalign}
-    \nonumber(4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\sum_{j=1}^{n_p}\sum_{k=1}^{n_p}q_j q_k \int_{0}^{\alpha}\frac{dt}{t^2}\,{exp}\left(\frac{-\pi^2k_x^2}{L_x^2t^2}+i \frac{2\pi k_xx_{ij}}{L_x}\right)
-    \\&\quad\quad\quad
-    \times\,{exp}\left(\frac{-\pi^2k_y^2}{L_y^2t^2}+i\frac{2\pi k_yy_{ij}}{L_y}\right)\times C_{k_z}(t)\,{ exp}\left(i\frac{2\pi k_zz_{ij}}{L_z}\right)\label{eq:transform}
-\end{flalign}
-The function $C_{k_z}(t)$ is given by
-\begin{flalign}
-     C_{k_z}(t) &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\,exp(-i\frac{2\pi n s}{L_z})\, exp(-s^2t^2)\, \phi(s) \label{eq:Cz}
-     % \\ &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\hspace{1mm}exp(-i\frac{2\pi n s}{L_z})\hspace{1mm} exp(-s^2t^2)\left[\frac{1}{1+ exp(-\gamma(0.5L_z+s))} + \frac{1}{1+ exp(-\gamma(0.5L_z-s))} -1\right]
-\end{flalign}
-Eq. (\ref{eq:transform}) is written using the reciprocal vector formulation as
+Dynamically allocated multidimensional arrays often lead to scattered memory layouts and multiple pointer dereferences. This results in poor cache performance and added complexity in memory management. 
+To address this, a one-dimensional array was used to represent the multidimensional structure. For an array with rank $d$ and dimensions $n_1\times \ldots \times n_d$, an element at ($i_1\times \ldots \times i_d$) maps to:
 \begin{flalign*}
-    \nonumber(4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}q_i q_j\int_{0}^{\alpha}\frac{dt}{t^2}\,{ exp}\left[i\vec G.(\vec r_i-\vec r_j)\right]\times C_{k_z}(t)\,{ exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\\
-    &=\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t)\,{exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right]\sum_{j=1}^{n_p}\sum_{k=1}^{n_p}q_i q_j\,{ exp}\left[i\vec G.(\vec r_i-\vec r_j)\right]
+    i_d + n_d \cdot \left( i_{d-1} + n_{d-1} \cdot \left( \ldots + n_2 \cdot i_1 \right)\right)
 \end{flalign*}
-The double summation over indices $j$ and $i$ is reformulated as a single summation incorporating the structure factor Eq. (\ref{eq:structurefactor}).
-Hence, the final expression for the two-dimensional Ewald summation takes the form
-\begin{flalign}
-    (4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{{k}}=-\infty}^{\infty}{}^\prime\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] |\,S(\vec G)\,|^2
-\end{flalign}
-The prime symbol (${}^\prime$) indicates that the $\vec{k} = 0$ component is omitted from the summation, since it vanishes when the system is electrically neutral, that is, when the total charge sums to zero.
-Define $\Lambda(p_1,p_2,p_3)$ as
-\begin{flalign}
-    \nonumber \Lambda(p_x,p_y,p_z) &= \frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}{}^\prime \left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] 
-    \\&\times B_{3D}(k_x,k_y,k_z)\times \exp\left( i \frac{2\pi k_x p_x}{K_x} + i \frac{2\pi k_y p_y}{K_y} + i \frac{2\pi k_z p_z}{K_z} \right)
-    \\&=\mathcal{F}_{3D}(E_{2D-M}.B_{3D})(p_x,p_y,p_z)
-\end{flalign}
-where the new screening factor array $E_{2D-M}$ is defined as
-\begin{flalign}
-    E_{2D-M}(k_x,k_y,k_z) &= \frac{\sqrt{\pi}}{L_xL_y}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] 
-\end{flalign}
-Note that $E_{2D-M}\cdot B_{3D}(k_x,k_y,k_z) = \mathcal{F}^{-1}_{3D}(\Lambda)$. 
-Furthermore, the structure factor can be efficiently calculated using the Smooth Particle Mesh Ewald (SPME) method by using Fast Fourier Transforms (FFTs).
-\begin{flalign}
-    \nonumber (4\pi\epsilon_o)U^{LR}  & \approx \frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}{}^{\prime}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right]\,B_{3D}(k_x,k_y,k_z)
-    \\& \quad\quad\quad\quad\quad\quad\quad\quad\times \left|\mathcal{F}_{3D}(Q)(k_x,k_y,k_z)\right|^2 \label{eq:newreci2DSPME}\\
-    \nonumber&= \sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z=0}^{K_3-1}\mathcal{F}^{-1}_{3D}(\Lambda)(k_x,k_y,k_z)\cdot \cdot \mathcal{F}_{3D}(Q)(k_x,k_y,k_z) \\
-    \nonumber &\quad\quad\quad\quad\quad\cdot K_xK_yK_z\,\mathcal{F}^{-1}_{3D}(Q)(k_x,k_y,k_z) \\
-    &=\sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z=0}^{K_3-1} Q(k_x,k_y,k_z) \cdot (\Lambda \star Q)(k_x,k_y,k_z)
-\end{flalign}
-The reciprocal space force is obtained as
-\begin{flalign}
-    \frac{\partial U^{LR}}{\partial r_{\beta i}} &= 2\sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z=0}^{K_3-1} \frac{\partial Q(k_x,k_y,k_z)}{\partial r_{\beta i}} \cdot (\Lambda \star Q)(k_x,k_y,k_z)
-\end{flalign}
-\section{Choosing Parameters}
-\subsection{Selection of $\gamma$}
-The Fourier transform of a top-hat function is known to yield oscillatory output. 
-This section seeks to identify suitable values of $\gamma$ that can reduce these oscillations.
+This approach reduced overhead, improved memory locality, and allowed faster access through direct indexing.
+\subsection{Vectorization}
+Vectorization enables the simultaneous processing of multiple data elements using a single instruction. This approach significantly improves both the speed and efficiency of computations. It is a fundamental technique in high-performance numerical computing, scientific simulations, graphics, and machine learning, as it leverages the SIMD (Single Instruction Multiple Data) capabilities present in modern processors.
 
-In particular, it is noted that the expression in Eq.~(\ref{eq:Cz}) represents the Fourier transform of the product of a top-hat function, $\phi(s)$, and a Gaussian function. It is hypothesised that most of the oscillations in the calculations would arise from the top-hat component. To investigate this, the behaviour of its Fourier transform is examined by varying the parameters $\gamma$ and $L_z$, to determine configurations that minimise the undesirable oscillatory effects.
+In this work, the program has been compiled using the flags \texttt{-O3}, \texttt{-mavx2}, \texttt{-march=native}, \texttt{-ftree-vectorize}, and \texttt{-ftree-vectorizer-verbose=1}. The \texttt{-O3} flag enables aggressive optimization, including automatic vectorization of loops. The \texttt{-mavx2} flag ensures that the generated code utilizes AVX2 instructions, which operate on 256-bit registers. This allows the simultaneous processing of 8 single-precision floating-point numbers or 4 double-precision floating-point numbers, thereby greatly accelerating loops and computation-intensive sections of the code.
 
-In Fig.~\ref{fig:tophat}, as the parameter $\gamma$ decreases, the top-hat function becomes increasingly localised and narrower in real space. Conversely, larger values of $\gamma$ produce a broader profile. However, as shown in Fig.~\ref{fig:fourieroftophatvarygammaL300}, broader top-hat functions lead to extended and persistent oscillations in the frequency domain, which can adversely affect the convergence of numerical computations for reciprocal space energies. To mitigate these oscillations, smaller values of $\gamma$ are preferred, resulting in narrower real-space functions with more rapidly decaying Fourier transforms. The trade-off, however, is that a smaller $\gamma$ reduces the region over which the top-hat function maintains a value of exactly one. To accommodate this, the domain length $L_z$ must be increased to ensure the simulation box remains entirely within this central region.
-
+\section{Optimized Implementation}
+% \section{Performance of Optimized Implementation}
+Following the improvements, hotspot analysis of the optimized implementation Fig.~(\ref{fig:resultVTuneFinal}), shows a notable shift in the computational profile. The \texttt{\_\_erfc} function no longer appears among the major hotspots. The primary contributors to CPU time are now \texttt{dist} (35.4\%) and \texttt{real\_omp\_fn.0} (23.2\%), both associated with real-space computations. 
+% Detailed performance improvements are presented in the \textit{Numerical Analysis} section of the thesis.
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\linewidth]{images/fourieroftophatvarygammaL300.jpg}
-  \caption{Fourier Transform of Top-hat Function with Varying $\gamma$, $L_z = 300$}
-  \label{fig:fourieroftophatvarygammaL300}
+% \begin{figure}[]
+    \centering
+    \includegraphics[width = \linewidth]{images/VTuneFinalHotSpots.png}
+    \caption{Hotspot analysis of the optimized Ewald summation implementation, using a polynomial interpolation for the error function. The overall CPU time distribution indicates improved efficiency in the real-space term.}
+    \label{fig:resultVTuneFinal}
 \end{figure}
-  
-  % \vspace{1em} % Optional spacing between figures
-
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\linewidth]{images/fourieroftophatvaryL_gamma0.5.jpg}
-  \caption{Fourier Transform of Top-hat Function with Varying $L_z$, $\gamma = 0.5$}
-  \label{fig:fourieroftophatvaryL_gamma0}
+% \begin{figure}[]
+    \centering
+    \begin{minipage}{0.7\textwidth}
+        \fbox{\includegraphics[width=\linewidth]{images/VTuneFinalTime.png}}
+    \end{minipage}%
+    \begin{minipage}{0.3\textwidth}
+        \caption{Execution time details for improved program.}
+    \end{minipage}
 \end{figure}
 
-Fig.~\ref{fig:fourieroftophatvaryL_gamma0} supports this choice by showing the Fourier Transform for varying $L_z$ at a fixed $\gamma = 0.5$. It demonstrates that changing $L_z$ does not impact the convergence or magnitude of the oscillations in the frequency domain. Although the damping frequency, where oscillations begin to decay, shifts higher with larger $L_z$values, this does not affect the essential behaviour of the transform. This confirms that increasing $L_z$ when using smaller $\gamma$ values does not introduce computational issues, making this a suitable strategy for reducing oscillations while preserving accuracy.
+\section{Parallelization}
+Parallel programming can have an enormous impact on the performance and scalability of computational applications. The motivation for parallelizing a code is to reduce its execution time, enabling it to run faster on modern multiprocessor systems. In this context, the Ewald summation algorithm is crucial, as it is computationally intensive. Depending on the specific component of the calculation, its computational complexity ranges from $O(N^2)$ to $O(NlogN)$, making it essential to accelerate through parallel techniques. Efficient parallelization is critical for simulating long-range interactions in order to study large-scale systems.
 
-\subsection{Selection of  $L_z$}
-To ensure that the simulation cell is completely contained within the region where $\phi(z) = 1$, the smallest possible value for $L_z$ is selected. This approach guarantees the proper placement of the simulation cell and reduces the number of grid points required for the Smooth Particle Mesh Ewald (SPME) method, thereby enhancing computational efficiency. To ascertain the optimal value of $L_z$, a binary search-based algorithm (refer to \textbf{Alg. \ref{alg:vacuum}}) was implemented to determine the box length.
+\subsection{OpenMP}
+In Ewald summation, the majority of the execution time is spent in running \texttt{for} loops. These loops are best suited for parallelization using OpenMP, which can effectively distribute the workload across multiple threads to improve performance.
 
-\input{binaryAlgorithm}
+OpenMP is a shared-memory parallel programming standard that allows for step-by-step parallelization. It requires only minor changes to the original sequential code, making it easy to apply. Unlike other methods that need a supercomputer, OpenMP can provide speed-up even on personal computers with two or more processor cores.
+
+\subsection{Implementation Details}
+\textbf{Reduction:} The \verb|reduction| clause is used to safely accumulate the result of a shared variable such as the real or the reciprocal energies. Each thread maintains a private copy of the reduction variable and they automatically combine that at the end of the parallel region using the specified reduction operator. An example of its application in the reciprocal space energy calculation is shown below
+\lstinputlisting[language=C]{CodeFiles/reduction.c}
+
+\textbf{Race condition during charge spreading:} A naïve approach that assigns one thread to map each charge onto the grid can lead to synchronization issues when multiple threads attempt to update the same grid point. During the computation of the charge spreading array $Q$, overlapping interpolation regions may cause several threads to modify the same grid location at the same time, resulting in a race condition and potentially incorrect values. To handle this, the \verb|atomic update| clause in OpenMP was used to ensure that updates are performed atomically, thereby preventing simultaneous read and write operations by different threads.
+\lstinputlisting[language=C]{CodeFiles/atomic.c}
+
+\textbf{Nested loops:} To parallelize the independent nested loops involved in the reciprocal space summation over the three-dimensional grids, the \texttt{collapse(3)} clause is employed. This directive flattens the nested loops into a single iteration space, thereby enhancing load balancing and facilitating uniform distribution of the computational workload across threads.
+\lstinputlisting[language=C]{CodeFiles/collapse.c}
+
+\subsection{Performance Evaluation}
+To assess the effectiveness of OpenMP based parallelization, a series of calculations were performed for varying system sizes. The execution times were recorded by varying the number of OpenMP threads from 1 to 23, examining the scalability of the program. The experiments were performed on a machine with a 12\textsuperscript{th} Gen Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500~$\times$~12 core processor. The operating system was OpenSUSE 15.5. The compiler was GCC 7.5.0.
+
+\begin{figure}[htbp]
+    \centering
+    \subfigure[Total simulation time for different thread counts for direct Ewald summation.]{%
+        \includegraphics[width=0.75\textwidth]{images/threadstimetotal.jpg}
+        \label{fig:thread-a}
+    }\\[1ex]
+    \subfigure[Total simulation time with SPME (grid: $64 \times 64 \times 512$, order: 8) across different thread counts.]{
+        \includegraphics[width=0.75\textwidth]{images/threadstimeSPMEtotal.jpg}
+        \label{fig:thread-b}
+    }
+    \caption{Comparison of threading performance.}
+    \label{fig:threading}
+\end{figure}
+
+The results show a significant reduction in the execution times with increasing threads, up to 12, which corresponds to the total cores in the system. Beyond this point, the performance gains plateau. This behaviour shows the potential of parallelization within the bounds of the available hardware and achieving higher gain on better hardware.  
+
+% \subsection{Implementation Correctness}
