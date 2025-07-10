@@ -5,8 +5,7 @@
 \label{Chapter3}
 
 \lhead{Chapter 3. \emph{Development of An Efficient 2D-Ewald Summation Method}} 
-In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. In this chapter, we propose to retain this summation as in the three-dimensional periodic system, and introduce a top-hat function in the ``screening'' term of the reciprocal sum, which acts as a filter for removing the contributions that are not from 2D-Ewald summation. This function is set up in such a way that it eliminates contribution from periodic images along the $z$-direction, while retaining the efficiency of 3D-Ewald summation in the reciprocal space. 
-
+In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. In this chapter, we propose to retain this summation as in the three-dimensional periodic system, and introduce a top-hat function, which acts as a filter for removing the contributions that are not from the 2D-Ewald summation. This function is set up so that it eliminates contribution from periodic images along the $z$-direction, while retaining the efficiency of 3D-Ewald summation in the reciprocal space. 
  
 \section{Top-hat function}
 \begin{figure}[]% if you want to fix the position of this image, add H inside the []
@@ -29,7 +28,7 @@ The smoothed version of $\phi(z)$ is expressed as:
 \begin{flalign}
     \phi(z) &= \frac{1}{1+ exp(-\gamma(0.5L_z+z))} + \frac{1}{1+ exp(-\gamma(0.5L_z-z))} -1 \label{eq:1}
 \end{flalign}
-This function uses a linear combination of two Fermi functions (sigmoid functions) to obtain a symmetrical function about the origin. The positive constant \textbf{$\gamma$} determines the steepness of the top-hat around the edges. The behaviour of $\phi(z)$ Eq. (\ref{eq:1}) is shown in Fig.\ (\ref{fig:tophat}). Other forms of the top-hat functions can also be used; some examples are as follows:
+This function uses a linear combination of two Fermi functions (sigmoid functions) to obtain a symmetrical function about the origin. The positive constant \textbf{$\gamma$} determines the steepness of the top-hat around the edges. The behaviour of $\phi(z)$ Eq. (\ref{eq:1}) is shown in Fig.~(\ref{fig:tophat}). Other forms of the top-hat functions can also be used; some examples are as follows:
 \begin{flalign}
         \phi(z) &= \frac{1}{2}[ \tanh(\gamma(x + 0.5L)) -\tanh(\gamma(x - 0.5L)) ] \\
         \phi(z) &= \frac{2}{\pi}\left[ \arctan \left( e^{\gamma (-x + 0.5L)} \right) + \arctan \left( e^{\gamma (x + 0.5L)} \right) \right]- 1 
@@ -41,7 +40,7 @@ This function uses a linear combination of two Fermi functions (sigmoid function
     % \parbox{0.5\linewidth}{\justifying \caption{Visualization of top-hat function for different $\gamma$. As $\gamma$ increases, the function transitions more sharply at the boundaries, approaching an ideal window function.}}
     \label{fig:tophat}
 \end{figure}
-To accomplish the above, a vacuum is introduced within the simulation cell along the $z$-axis, resulting in a total side length of $ L_z$. This length must ideally be long enough to so that the next periodic image lies in the region which this function is exactly zero. 
+A vacuum is introduced within the simulation cell along the $z$-axis to accomplish the above, resulting in a total side length of $ L_z$. Ideally, this length must be long enough for the next periodic image to lie in the region where this function $\phi(z)$ is precisely zero. 
 
 \section{Mathematical Details}
 To evaluate the long-range contribution to the electrostatic energy in a two-dimensional (2D) periodic system, we begin with the derivation of the standard three-dimensional (3D) Ewald summation expression. A top-hat function, denoted by $\phi(z)$, is introduced to eliminate the influence of periodic images along the non-periodic $z$-direction. This function ensures that only the electrostatic interactions within the simulation box along the $z$-direction are retained, effectively reducing the system to 2D while preserving the 3D summation structure and efficiency.
@@ -59,7 +58,7 @@ This transformation separates the exponential term into components along the $x$
     \nonumber &=\frac{1}{2}\sum_{\vec{M}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}\frac{2q_i q_j}{\sqrt{\pi}}\int_{0}^{\alpha}dt\,  {exp}\left[-(x_{ij}+m_xL_x)^2 t^2\right] \\
     &\quad\quad\quad\times{exp}\left[-(y_{ij}+m_yL_y)^2 t^2\right]\times{exp}\left[-(z_{ij}+m_zL_z)^2 t^2\right] \, \phi(z_{ij}+m_zL_z)
 \end{flalign}
-The Poisson summation@@@Prateek cite@@@ formula is used to convert the expression from real space to reciprocal space. The detailed derivation of this transformation is provided in the \colorbox{yellow}{Appendix}.
+The Poisson summation formula~\cite{cordoba1988formule} converts the expression from real to reciprocal space. The detailed derivation of this transformation is provided in the Appendix~\ref{AppendixA}.
 \begin{flalign}
     \nonumber(4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\sum_{j=1}^{n_p}\sum_{k=1}^{n_p}q_j q_k \int_{0}^{\alpha}\frac{dt}{t^2}\,{exp}\left(\frac{-\pi^2k_x^2}{L_x^2t^2}+i \frac{2\pi k_xx_{ij}}{L_x}\right)
     \\&\quad\quad\quad
@@ -105,11 +104,11 @@ The reciprocal space force is obtained as
     \frac{\partial U^{LR}}{\partial r_{\beta i}} &= 2\sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z=0}^{K_3-1} \frac{\partial Q(k_x,k_y,k_z)}{\partial r_{\beta i}} \cdot (\Lambda \star Q)(k_x,k_y,k_z)
 \end{flalign}
 \section{Selection of Parameters}
-\subsection{Obtaining the Value of $\gamma$}
+\subsection{Obtaining the Value of $\gamma$} \label{finding_gamma}
 The Fourier transform of a top-hat function is known to yield oscillatory output. 
 This section seeks to identify suitable values of $\gamma$ that can reduce these oscillations. The expression in Eq.\ (\ref{eq:Cz}) represents the Fourier transform of the product of a top-hat function, $\phi(s)$, and a Gaussian function. To investigate this, the behaviour of its Fourier transform is examined by varying the parameters $\gamma$ and $L_z$, to determine configurations that minimise the undesirable oscillatory effects.
 
-In Fig.~\ref{fig:tophat}, we show the behavior of the top-hat function  as the parameter $\gamma$ decreases, the top-hat function becomes increasingly localised and narrower in real space. Conversely, larger values of $\gamma$ produce a broader profile. However, as shown in Fig.~\ref{fig:fourieroftophatvarygammaL300}, broader top-hat functions lead to extended and persistent oscillations in the frequency domain, which can adversely affect the convergence of numerical computations for reciprocal space energies. To mitigate these oscillations, smaller values of $\gamma$ are preferred, resulting in narrower real-space functions with more rapidly decaying Fourier transforms. The trade-off, however, is that a smaller $\gamma$ reduces the region over which the top-hat function maintains a value of exactly one. To accommodate this, the domain length $L_z$ must be increased to ensure the simulation box remains entirely within this central region.
+In Fig.~(\ref{fig:tophat}), we show the behaviour of the top-hat function  as the parameter $\gamma$ decreases; the top-hat function becomes increasingly localised and narrower in real space. Conversely, larger values of $\gamma$ produce a broader profile. However, as shown in Fig.~\ref{fig:fourieroftophatvarygammaL300}, broader top-hat functions lead to extended and persistent oscillations in the frequency domain, which can adversely affect the convergence of numerical computations for reciprocal space energies. To mitigate these oscillations, smaller values of $\gamma$ are preferred, resulting in narrower real-space functions with more rapidly decaying Fourier transforms. The trade-off, however, is that a smaller $\gamma$ reduces the region over which the top-hat function maintains a value of exactly one. To accommodate this, the domain length $L_z$ must be increased to ensure the simulation box remains entirely within this central region.
 
 \begin{figure}[htbp]
   \centering
@@ -127,11 +126,12 @@ In Fig.~\ref{fig:tophat}, we show the behavior of the top-hat function  as the p
   \label{fig:fourieroftophatvaryL_gamma0}
 \end{figure}
 
-Fig.~\ref{fig:fourieroftophatvaryL_gamma0} supports this choice by showing the Fourier Transform for varying $L_z$ at a fixed $\gamma = 0.5$. It demonstrates that changing $L_z$ does not impact the convergence or magnitude of the oscillations in the frequency domain. Although the damping frequency, where oscillations begin to decay, shifts higher with larger $L_z$values, this does not affect the essential behaviour of the transform. This confirms that increasing $L_z$ when using smaller $\gamma$ values does not introduce computational issues, making this a suitable strategy for reducing oscillations while preserving accuracy.
+Fig.~(\ref{fig:fourieroftophatvaryL_gamma0}) supports this choice by showing the Fourier Transform for varying $L_z$ at a fixed $\gamma = 0.5$. It demonstrates that changing $L_z$ does not impact the convergence or magnitude of the oscillations in the frequency domain. Although the damping frequency, where oscillations begin to decay, shifts higher with larger $L_z$values, this does not affect the essential behaviour of the transform. This confirms that increasing $L_z$ when using smaller $\gamma$ values does not introduce computational issues, making this a suitable strategy for reducing oscillations while preserving accuracy.
 
 \subsection{Selection of  $L_z$}
-To ensure that the simulation cell is completely contained within the region where $\phi(z) = 1$, the smallest possible value for $L_z$ is selected. This approach guarantees the proper placement of the simulation cell and reduces the number of grid points required for the smooth particle mesh Ewald (SPME) method, thereby enhancing computational efficiency. To ascertain the optimal value of $L_z$, a binary search-based algorithm (refer to \textbf{Alg. \ref{alg:vacuum}}) was implemented to determine the box length.
+To ensure that the simulation cell is completely contained within the region where $\phi(z) = 1$, the smallest possible value for $L_z$ is selected. This approach guarantees the proper placement of the simulation cell and reduces the number of grid points required for the smooth particle mesh Ewald (SPME) method, thereby enhancing computational efficiency. To ascertain the optimal value of $L_z$, a binary search-based algorithm (refer to \textbf{Alg. \ref{alg:vacuum}}) was implemented to determine the box length. Here, the midpoints within a predefined range are checked, and then by repeatedly narrowing the interval, the algorithm quickly converges on the optimal value. This approach reduces the search space \textit{logarithmically}, significantly decreasing the number of evaluations required.
+
+Table~\ref{tab:Lz_values} lists the values of $L_z$ obtained for different decay parameters $\gamma$. As $\gamma$ increases, the decay of the external potential becomes sharper, leading to a more confined region in which $\phi(z) = 1$. 
 
 \input{binaryAlgorithm}
-
-@@@Prateek: Difficult to understand your pseudo code, could you please put comments@@@
+\input{Tables/boxlength}

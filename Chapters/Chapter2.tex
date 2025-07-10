@@ -17,25 +17,25 @@ For a point charge system, $\rho(\vec{r})$ is given by
 \end{equation}
 To simulate an ionic system, it is essential to compute these interactions acting on each ion. However, the computational cost of these calculations typically scales quadratically with the number of ions, i.e., $O(N^2)$. This becomes computationally prohibitive for realistic molecular simulations involving as many as $10^5$ ions with \ac{PBC}.
 
-\swb{What is the acronym for a PBC?}
-
 \section{Ewald Summation Method}
 The Ewald summation method, developed by Ewald~\cite{Ewald1921}, is a classical approach used to compute long-range Coulombic interactions in periodic systems. Ewald proposed decomposing the $1/r$ potential into two rapidly converging parts
 \begin{flalign*}
 \frac{1}{r} = \frac{{erfc}(\alpha r)}{r} + \frac{{erf}(\alpha r)}{r}
 \end{flalign*}
-Here, $\alpha$ is the Ewald splitting parameter that controls the convergence of the two parts. The first term represents a short-range interaction computed in real space, while the second term corresponds to a long-range interaction evaluated in reciprocal (Fourier) space. Additionally, a self-interaction is added to the long-range term to make periodic and later subtracted.
+Here, $\alpha$ is the Ewald splitting parameter that controls the convergence of the two parts. The first term represents a short-range interaction energy ($U^{SR}$) computed in real space, while the second term corresponds to a long-range interaction energy ($U^{LR}$) evaluated in reciprocal (Fourier) space. Additionally, a self-interaction energy ($U^{S}$) is added to the long-range term to make periodic and later subtracted.
 
-The total electrostatic energy is computed by evaluating three terms: 
+$\therefore$ The total electrostatic energy is computed by evaluating three terms: 
 \begin{flalign}
 U = U^{SR} + U^{LR} + U^{S}.
 \end{flalign}
-This decomposition ensures convergence and the computational cost can be significantly reduced by applying techniques amenable for such sums. 
+This decomposition ensures convergence, and the computational cost can be significantly reduced by applying techniques amenable to such sums. 
 
-\swb{You define the notations, e.g., $U^{LR}$.}
+% \swb{You have not defined the notations, e.g., $U^{LR}$.}
 
 \subsection{Three-Dimensional Periodic Systems}
-We begin by defining a reciprocal lattice vector $\vec{G}$ as $\vec G =  \frac{k_x2\pi}{L_x}\hat x+\frac{k_y2\pi}{L_y}\hat y+\frac{k_z2\pi}{L_z}\hat z$ @@@Prateek: definition of k is not clear@@@, where $k_x$, $k_y$, $k_z$ $\in$ $\mathbb{Z}^3$, and the structure factor $S(\vec G)$ as
+We begin by defining a reciprocal lattice vector $\vec{G}$ as $\vec G =  \frac{k_x2\pi}{L_x}\hat x+\frac{k_y2\pi}{L_y}\hat y+\frac{k_z2\pi}{L_z}\hat z$ 
+% @@@Prateek: definition of k is not clear@@@
+,where $k_x$, $k_y$, $k_z$ $\in$ $\mathbb{Z}$, and the structure factor $S(\vec G)$ as
 \begin{flalign}
     S(\vec G) &= \sum_{j=1}^{n_p}q_j\,exp(i\vec G.\vec r_j).
 \end{flalign}
@@ -49,14 +49,14 @@ Each of these terms is written as
     U^{S} &= -\frac{\alpha}{\sqrt{\pi}}\sum_{i=1}^{n_p} q_i^2  \\
     U^{SR}&=\frac{1}{2}\sum_{i=1}^{n_p}{}^\prime\sum_{j=1}^{n_p}q_i q_j\frac{erfc(\alpha|\vec{r_j}-\vec{r_i}|)}{|\vec{r_j}-\vec{r_i}|}
 \end{flalign}
-The computational cost of the traditional Ewald summation method, which scales as $O(N^2)$ and can be reduced to $O(N^\frac{3}{2})$ with optimised approaches, remains prohibitive for extensive molecular simulations\cite{frenkel2002understanding}. This limitation has motivated the development of more efficient techniques such as the Particle Mesh Ewald (PME)\cite{hockney2021computer} and Smooth Particle Mesh Ewald (SPME)\cite{SPME} methods.
+The computational cost of the traditional Ewald summation method, which scales as $O(N^2)$ and can be reduced to $O(N^\frac{3}{2})$ with optimised approaches, remains prohibitive for extensive molecular simulations\cite{frenkel2002understanding}. This limitation has motivated the development of more efficient techniques such as the Particle Mesh Ewald (PME)\cite{hockney2021computer} and \aclu{SPME} (\ac{SPME})\cite{SPME} methods.
 
 The electrostatic force on $i^{th}$ atom in each direction ($\beta = x,y,z$) can be obtained by taking a derivative of the above components with respect to $\vec{r_{\beta i}}$. Each of the individual term would be defined as $\partial U^{LR}/\partial  r_{\beta i}$ (reciprocal space force), $\partial U^{SR}/\partial r_{\beta i}$ (real space force) and $\partial U^{S}/\partial r_{\beta i}$ (correction force).
 
 \subsection{Smooth Particle Mesh Ewald}
-The particle mesh Ewald (PME) method was first introduced by Hockney and Eastwood,@@@Prateek: cite@@@ utilising Laplace interpolation techniques to assign charges onto a regular grid. However, the discontinuous nature of Laplace interpolations posed challenges in accurately computing forces. To address this, the smooth particle mesh Ewald (SPME) method was later developed by Essmann \textit{et al.},@@@Please cite@@@ which employs exponential B-splines to smoothly interpolate the charge distribution on the grid, enabling more accurate and efficient computations. These approaches employ fast fourier transform (FFT), thereby decreasing the computational complexity from $O(N^2)$ to $O[Nlog(N)]$, with a multiplicative constant that varies based on the desired level of accuracy.
+The particle mesh Ewald method was first introduced by Hockney and Eastwood~\cite{hockney2021computer} utilising Laplace interpolation techniques to assign charges onto a regular grid. However, the discontinuous nature of Laplace interpolations posed challenges in accurately computing forces. To address this, the \ac{SPME} method was later developed by Essmann \textit{et al.}~\cite{SPME} which employs exponential B-splines to smoothly interpolate the charge distribution on the grid, enabling more accurate and efficient computations. These approaches employ fast fourier transform (FFT), thereby decreasing the computational complexity from $O(N^2)$ to $O[Nlog(N)]$, with a multiplicative constant that varies based on the desired level of accuracy.
 
-In the SPME method, the structure factor in the reciprocal space sum is expressed as
+In the \ac{SPME} method, the structure factor in the reciprocal space sum is expressed as
 \begin{equation}
 \exp(2\pi i \mathbf{k} \cdot \mathbf{r}) =
 \exp\left(2\pi i \frac{k_x u_1}{K_1} \right)
@@ -76,7 +76,7 @@ and $\lambda$ is the direction ($\lambda = $ x, y, z) and $n$ as the order of B-
 \end{equation}
 The B-spline functions are defined recursively. The second-order B-spline is 
 $M_2(u) = 
-1 - |u - 1| \text{ for } 0 \le u \le 2$, and zero otherwise, and for higher orders \( n > 2 \), the recursion is defined by Cox-de Boor formula as @@@Prateek cite@@@
+1 - |u - 1| \text{ for } 0 \le u \le 2$, and zero otherwise, and for higher orders \( n > 2 \), the recursion is defined by Cox-de Boor formula~\cite{de1968uniform, de1972calculating} as 
 \begin{equation}
 M_n(u) = \frac{u}{n-1} M_{n-1}(u) + \frac{n - u}{n - 1} M_{n-1}(u - 1).
 \end{equation}
@@ -182,5 +182,12 @@ The 2D-reciprocal space force can therefore be derived as
       \frac{\partial U^{LR}}{\partial r_{\beta i}} &= 2\sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z^\prime=-\infty}^{\infty} \frac{\partial Q(k_x,k_y,k_z)}{\partial r_{\beta i}} \cdot (\theta \star Q)(k_x,k_y,k_z)
 \end{flalign}
 
-@@@Prateek: Please write the implementation part of it@@@
-@@@May be you can compare the time here between the two methods@@@
+For the complete code implementations of this program refer to Appendix \ref{AppendixB}
+
+\section{Need for Faster 2D Methods}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/kAWATA_VS_SPME_Result30k_3DEwald.jpg}
+    \caption{Comparison of the CPU-times of the 3D and 2D Ewald methods with their particle mesh approach for the calculation of total Coulombic energies. Parameters for the particle mesh implementation were chosen to maintain high accuracy. For the \ac{SPME} method, a grid size of 64 and an interpolation order of 8 were used. For the 2D-PME method, grid sizes of 64 in the x and y directions and 128 in the z direction were taken, with an interpolation order of 8.}
+    \label{fig:enter-label}
+\end{figure}

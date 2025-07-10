@@ -1,0 +1,57 @@
+% high  77AB59
+% mid C9DF8A
+% low F0F7DA
+\begin{table}[]
+\centering
+\caption{Particle Mesh Method: performance and accuracy for $\gamma = 2.5$.}
+\label{tab:tablespme_gamma2p5}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{cccccc}
+\hline
+\multicolumn{1}{|c|}{{Order$_{xy}$}} &
+  \multicolumn{1}{c|}{{Order$_z$}} &
+  \multicolumn{1}{c|}{{Grid$_{xy}$}} &
+  \multicolumn{1}{c|}{{Grid$_z$}} &
+  \multicolumn{1}{c|}{{\begin{tabular}[c]{@{}c@{}}CPU-Time\\ (sec)\end{tabular}}} &
+  \multicolumn{1}{c|}{{\begin{tabular}[c]{@{}c@{}}Rel. Err.\\ Energy\end{tabular}}} \\ \hline
+\rowcolor[HTML]{F0F7DA} 
+4  & 4  & 16 & 128 & 0.0276  & 4.3E-04 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 4  & 32 & 128 & 0.0313  & 3.3E-05 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 4  & 64 & 128 & 0.0396  & 9.1E-06 \\
+\rowcolor[HTML]{F0F7DA} 
+4  & 8  & 16 & 128 & 0.0357  & 4.3E-04 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 8  & 32 & 128 & 0.0388  & 2.7E-05 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 8  & 64 & 128 & 0.0478  & 3.1E-06 \\
+\rowcolor[HTML]{F0F7DA} 
+4  & 10 & 16 & 128 & 0.0613  & 4.3E-04 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 10 & 32 & 128 & 0.0653  & 2.7E-05 \\
+\rowcolor[HTML]{C9DF8A} 
+4  & 10 & 64 & 128 & 0.0722  & 3.1E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 8  & 16 & 128 & 0.0534  & 1.5E-05 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 8  & 32 & 128 & 0.0567  & 1.7E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 8  & 64 & 128 & 0.0652  & 1.5E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 10 & 16 & 128 & 0.0798  & 1.5E-05 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 10 & 32 & 128 & 0.0824  & 1.7E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+6  & 10 & 64 & 128 & 0.0909  & 1.5E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+8  & 8  & 32 & 128 & 0.0936  & 1.5E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+8  & 8  & 64 & 128 & 0.1037  & 1.5E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+8  & 10 & 64 & 128 & 0.12805 & 1.5E-06 \\
+\rowcolor[HTML]{C9DF8A} 
+10 & 10 & 64 & 128 & 0.20766 & 1.5E-06
+\end{tabular}%
+}
+\end{table}

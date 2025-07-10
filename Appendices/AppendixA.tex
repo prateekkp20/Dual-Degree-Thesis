@@ -1,20 +1,21 @@
-% Appendix Template
-
-\chapter{Real to fourier space using Poisson Summation} % Main appendix title
-
-\label{AppendixA} % Change X to a consecutive letter; for referencing this appendix elsewhere, use \ref{AppendixX}
-
-\lhead{Appendix A. \emph{Real to fourier space using Poisson Summation}} % Change X to a consecutive letter; this is for the header on each page - perhaps a shortened title
-In the X and Y direction, we have the function
+\chapter{Real to Fourier Space Transformation using Poisson Summation}
+\label{AppendixA} 
+\lhead{Appendix A. \emph{Real to Fourier Space Transformation using Poisson Summation}} 
+Let us consider the following periodic functions defined along different spatial directions.
+In the $x$-direction, we define the function $F(x)$ as:
 \begin{flalign*}
     F(x) &= \sum_{{m_x}=-\infty}^{\infty}exp\left[-(x+m_xL_x)^2 t^2\right]
 \end{flalign*}
-In the Z direction, we have the function
+and similarly, in the $z$-direction, the function $F(z)$ is given by:
 \begin{flalign*}
     F(z) &= \sum_{{m_z}=-\infty}^{\infty}exp\left[-(z+m_zL_z)^2 t^2\right]\phi(z+m_zL_z) 
     % \\ &= \sum_{{m_z}=-\infty}^{\infty}exp\left[-(z+m_zL_z)^2 t^2\right]\left[\frac{1}{1+ exp(-\gamma(L_z(0.5+m_z)+z))} + \frac{1}{1+ exp(-\gamma(L_z(0.5-m_z)-z))} -1\right]
 \end{flalign*}
-Note that, $F(z)$ is a periodic function because $F(z) = F(z+L_z)$. So using the poisson summation formula, we can write any periodic function as a fourier series as follows:
+where $L_x$ and $L_z$ denote the periodic lengths in the respective directions, $t$ is a constant, and $\phi(z)$ is a top-hat function.
+Note that both functions $F(x)$ and $F(z)$ are periodic due to the infinite summation. Specifically,\[
+F(x + L_x) = F(x) \quad \text{and} \quad F(z + L_z) = F(z).
+\]
+According to the Poisson summation formula, any periodic function with period \( L_z \) can be represented as a Fourier series. Hence, \( F(z) \) can be written as:
 \begin{flalign*}
     F(z) &= \sum_{k=-\infty}^{\infty} C_k \hspace{1mm}exp(i\frac{2\pi k z}{L_z}) 
 \end{flalign*}
@@ -36,8 +37,8 @@ To get the coefficients for the X and Y direction function, put $\phi(s) = 1$, a
 \end{flalign*}
 So our final expression to transform from real to reciprocal space would be:
 \begin{flalign*}
-    \sum_{{m_x}=-\infty}^{\infty}exp\left[-(x+m_xL_x)^2 t^2\right] &= \frac{1}{L_x}\sqrt{\frac{\pi}{t}}\sum_{k_x=-\infty}^{\infty}exp\left(\frac{-\pi^2k^2}{L_x^2t}+i\frac{2\pi k_x x}{L_x}\right) 
+    F(x) &=\sum_{{m_x}=-\infty}^{\infty}exp\left[-(x+m_xL_x)^2 t^2\right] = \frac{1}{L_x}\sqrt{\frac{\pi}{t}}\sum_{k_x=-\infty}^{\infty}exp\left(\frac{-\pi^2k^2}{L_x^2t}+i\frac{2\pi k_x x}{L_x}\right) 
     % \\ \sum_{{m_z}=-\infty}^{\infty}exp\left[-(z+m_zL_z)^2 t^2\right]\phi(z+m_zL_z) &=  \frac{1}{L_z}\sum_{k=-\infty}^{\infty}  \left[ \int_{-\infty}^{\infty}ds\, exp(-s^2t^2)\,exp(-i\frac{2\pi n s}{L_z}) \, \phi(s)\right]  exp\left(i\frac{2\pi kx}{L_x}\right)  
-    \\ \sum_{{m_z}=-\infty}^{\infty}exp\left[-(z+m_zL_z)^2 t^2\right]\phi(z+m_zL_z) &=  \sum_{k_z=-\infty}^{\infty}  C_{k_z}(t)  \, exp\left(i\frac{2\pi k_z z}{L_z}\right)  
+    \\ F(z) &=\sum_{{m_z}=-\infty}^{\infty}exp\left[-(z+m_zL_z)^2 t^2\right]\phi(z+m_zL_z) =  \sum_{k_z=-\infty}^{\infty}  C_{k_z}(t)  \, exp\left(i\frac{2\pi k_z z}{L_z}\right)  
 \end{flalign*}
 The value of $C_{k_z}(t)$ comes from equation \ref{eq:ck}

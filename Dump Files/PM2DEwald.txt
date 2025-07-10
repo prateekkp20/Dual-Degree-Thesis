@@ -30,12 +30,6 @@
 23.         **for** `n3 ← −n_max` **to** `n_max` **do**
 24.             `z_direc[i][k3] ← z_direc[i][k3] + M_n(u[i][2]−k3−n3*Grid[2], n[2])`
 
-// Initialize input array to zero (already done in allocation above, repeat for clarity)
-25. **for** `tx ← 0` **to** `Grid[0]−1` **do**
-26.     **for** `ty ← 0` **to** `Grid[1]−1` **do**
-27.         **for** `tz ← 0` **to** `Grid[2]−1` **do**
-28.             `in[tx][ty][tz] ← 0`
-
 // Build the final Q-matrix (charge assignment)
 29. **for** `j ← 0` **to** `natoms−1` **do**
 30.     **if** `ion_charges[j] = 0` **then continue**

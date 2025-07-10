@@ -1,8 +1,5 @@
 Function real(PosIons, ion_charges, natoms, betaa, box, cutoff):
     Initialize real_energy to 0
-
-    (Optionally use parallelization if supported)
-
     For i from 0 to natoms - 1:
         For j from 0 to i - 1:
             modR = distance between ion i and ion j, considering box

@@ -1,56 +1,53 @@
 \chapter{Numerical Evaluation: Accuracy and Efficiency}
-
-\label{Chapter5} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
-
+\label{Chapter5}
 \lhead{Chapter 5. \emph{Numerical Evaluation: Accuracy and Efficiency}}
-% We performed experiments on a machine with 4 Intel Xeonr
-% Quad-core E7320 processors and 16 GB memory. The operating
-% system was Fedora release 9 with kernel 2.6.25. The compiler was
-% gcc 4.3.0
-Calculations were performed on 12\textsuperscript{th} Gen Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500~$\times$~12 core processor
-we evaluated the computational efficiency and accuracy of our algorithm and compared it with PHL ewald and also with the method given by kawata et al.
-The dimentions of the system were $L_x = L_y = L_z = 25$ \AA . The configuration of the systems were generated randomly using LAMMPS.
 
-\section{Convergence}
-We took a system of 10,000 Na and Cl ions in a 25 \AA box for our convergence benchmarking.
-Based on our analysis for various gamma values, we calculated the reciprocal space energies for a given system and checked for the convergence of the sum. But due to very high $k_z$ values for the convergence this method becomes more expensive as compared to other older methods because for every iteration of $k_z$ to compute the energy the new structure factor $S(\vec G)$ is computed which increase the time complexity by $O(N)$, so now we will use the particle mesh ewald which doesn't depend on the $k_z$ loop as the bottleneck of that program is grid interpolation which is done outside the energy summation loop.
-% \begin{figure}[htbp]
-\begin{figure}[H]
+In this chapter, we present a comprehensive analysis of the performance of our newly proposed method with particular focus on its accuracy and efficiency. Through a series of computational experiments, we analyze how different parameters influence the quality of results and CPU-time performance. Specifically, we focus on convergence and the scaling behaviour of our method. All simulations were conducted on ionic systems of sodium (Na\textsuperscript{+}) and chloride (Cl\textsuperscript{-}) ions randomly distributed in a cubic box having a length of 25 \AA. These systems were modelled using the molecular dynamics package LAMMPS~\cite{LAMMPS}. The Ewald splitting parameter $\alpha$ was set to $5.42/L$ as recommended in several previous literature. @@@Please cite@@@
+
+\section{Convergence and Accuracy of Reciprocal-Space Contributions with Varying $\gamma$}
+In this section, we investigate how the reciprocal-space energy converges as the constant $\gamma$ is varied. A model system of 10000 ions was set up in a box with sides of length 25 \AA. As a benchmark, reference energies were computed using mathematically ``exact'' but computationally inefficient two-dimensional Ewald (2D-EW) method~\cite{kawata2001rapid}.
+\subsection{The Role of $\gamma$}
+The parameter $\gamma$ plays a central role in controlling the sharpness of the top-hat function that is introduced in the reciprocal sum of 3D Ewald summation method. The introduction of top-hat function filters the interactions arising from interaction of images in the z-direction.  In the new formulation, the long-range part of the Ewald summation is mathematically expressed as
+\begin{flalign}
+    (4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{{k}}=-\infty}^{\infty}{}^\prime\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] |\,S(\vec G)\,|^2
+\end{flalign}
+here $\vec k$ = \{$k_x,k_y,k_z$\} and  the constant $\gamma$ appears in the function $C_{k_z}(t)$ given by
+\begin{flalign}
+     C_{k_z}(t) &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\hspace{1mm}exp(-i\frac{2\pi n s}{L_z})exp(-s^2t^2)\\
+     &\times \left[\frac{1}{1+ exp(-\gamma(0.5L_z+s))} + \frac{1}{1+ exp(-\gamma(0.5L_z-s))} -1\right]
+\end{flalign}
+
+\begin{figure}[htbp]
     \centering
     \includegraphics[scale=0.4]{images/logerror_vs_kz_forreport.jpg}
-    % \includegraphics[width=\linewidth]{images/logerror_vs_kz_forreport.jpg}
     \caption{Convergence of relative errors in $U_{LR}$ with $k_z$ for various values of $\gamma$.}
-    \label{fig:result1}
+    \label{fig:convergence_gamma}
 \end{figure}
-\section{Particle Mesh Ewald-Modified}
-To enhance the efficiency of the calculations, the structure factor was computed using B-spline interpolation employing Fast Fourier Transforms (FFTs). The best accuracy and optimal time of our method+SPME is determined from the combination of gamma, order and grid. smaller the gamma, higher the grid points required for the interpolation. 
-\section{Real Space Improvement}
-The of the interpolation function gave around 15\% improvement in the calculation time. 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\linewidth]{images/realspaceopt.jpg}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\linewidth]{images/realspaceopterrors.jpg}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
-\section{Performance Scaling of the Ewald Method}
-\subsection{Scaling Behaviour with System Size}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{images/Result30k.jpg}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
-% \subsection{Parallel Efficiency via Multi-threading}
-SPME configuration
-gx = 64 
-gy = 64
-gz = 512
-nxyz = 8
 
-% \section{Summary}
+As shown in Fig.~(\ref{fig:convergence_gamma}) and discussed in Section~\ref{finding_gamma}, the use of different $\gamma$ values significantly influences the rate of convergence of the reciprocal-space energy. Larger $\gamma$ values lead to relatively faster convergence but introduce oscillatory behaviour in the energy estimates with low accuracy, contrary to smaller values, which have high accuracy and fewer oscillations. To achieve convergence in energies, one needs to reach a threshold $k_z$. Consequently, this brings a major drawback: for every additional iteration of $k_z$, the structure factor $S(\vec G)$~Eq.(\ref{eq:structurefactor}) is recomputed, which scales as $O(N)$@@@Please check this@@@, adding to the computational burden for high precision simulations. 
+
+To eliminate this cost, we transition to the use of the Particle Mesh Ewald (PME) method, as formulated in Eq.~(\ref{eq:newreci2DSPME}). In this formulation, the most computationally expensive step becomes the charge interpolation on grids, which is executed only once and outside the main energy summation loop. As a result, the main energy summation loop is no longer the computational bottleneck, enabling significantly faster calculations without sacrificing accuracy.
+
+\section{Implementation with Particle Mesh Ewald}
+The Particle Mesh Ewald formulation introduces several additional parameters that directly impact both computational efficiency and numerical accuracy. They are the resolution of the mesh grid used for the Fast Fourier Transform (FFT) and the order of the B-spline interpolation for charge assignment. In this section, we systematically investigate how variations in these parameters affect the performance of our method, particularly in conjunction with different values of parameter $\gamma$.
+
+In our modified implementation, we performed extensive tests across a variety of $\gamma$ values, grid sizes, and B-spline interpolation orders. For each configuration, we measured the accuracy of the computed electrostatic energy and recorded the CPU execution time. These combinations are presented in the Tables~\ref{tab:tablespme_gamma0p2}, \ref{tab:tablespme_gamma0p5}, \ref{tab:tablespme_gamma1}, \ref{tab:tablespme_gamma2p5}, and \ref{tab:tablespme_gamma10}
+
+\input{Tables/N2D-PME/color}
+\input{Tables/N2D-PME/gamma0p2}
+\input{Tables/N2D-PME/gamma0p5}
+\input{Tables/N2D-PME/gamma1}
+\input{Tables/N2D-PME/gamma2p5}
+\input{Tables/N2D-PME/gamma10}
+
+Several general trends emerged from the analysis. Lower values of $\gamma$ were found to require finer grids in the $ z$-direction in order to achieve a comparable level of accuracy, which in turn increases the computational cost. Increasing the B-spline interpolation order generally improves the accuracy of the energy calculations; however, that effect diminishes beyond a certain order while the computational overhead continues to increase. While multiple configurations may yield acceptable results, the combination of $\gamma = 1$, a grid size of $64 \times 64 \times 128$, and a B-spline interpolation order of 8 was found to offer the most favourable balance between numerical accuracy and computational efficiency among the cases evaluated.
+
+\section{Scaling Behaviour with System Size}
+To evaluate the scalability of our method with respect to system size, we analyzed the computational performance of the PME implementation of our method. The number of ions was varied from 1,000 to 30,000, with particle positions randomly distributed within a fixed simulation box. Throughout all simulations, the PME configuration was kept uniform with a grid size of $64 \times 64 \times 128$, a B-spline interpolation order of 8, and parameter $\gamma = 1$, as identified in the previous section. For comparison, we also included results from previously established methods based on 2D and 3D periodic boundary conditions, with particle mesh adaptation for a similar level of accuracy. The scaling behaviour of the total computation time with increasing system size is shown in Fig.~(\ref{fig:scaling_results}). 
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\linewidth]{images/Scaling_behaviour_Result30k.jpg}
+    \caption{Scaling behaviour of the computation time for total Ewald energies with increasing system size for the optimized PME implementation. The number of ions was varied from 1,000 to 30,000 while keeping the simulation box size fixed.  Our method demonstrated highly improved performance compared to the conventional 2D-PME approach and a similar performance to 3D-\ac{SPME}, using the same particle mesh configuration and achieving a comparable level of accuracy.}
+    \label{fig:scaling_results}
+\end{figure}
+Our method shows a substantial improvement in computational efficiency compared to the conventional \ac{2D-PME} method. The scaling of the CPU Time is significantly better as shown with the slower growth of the computational time in our method's curve. This enhanced performance can be attributed to the 3D-\ac{SPME} like formulation of our new method, which is evident as both show a similar performance. Since the 3D-SPME method is known for its scalability and accuracy, our implementation matches its performance while providing adaptability to slab-like geometries often encountered in biological and interfacial simulations. This major performance improvement opens the door for simulations of larger biomolecular systems or extended time scales without compromising accuracy or efficiency.

@@ -1,0 +1,46 @@
+\makeglossaries
+
+% ----------------------------------------------------------
+% Define a glossary type for symbols
+\newglossary[slg]{symbolslist}{syi}{syg}{List of Symbols}
+
+% ----------------------------------------------------------
+% Define abbreviations (default glossary type)
+\newacronym{3d}{3D}{Three Dimensional}
+\newacronym{fem}{FEM}{Finite Element Method}
+
+% ----------------------------------------------------------
+% Define symbols (in our new symbolslist glossary)
+\newglossaryentry{Cg}{
+    type=symbolslist,
+    name={$C_g$},
+    description={contiguity}
+}
+\newglossaryentry{phid}{
+    type=symbolslist,
+    name={$\phi_d$},
+    description={dihedral angle}
+}
+\newglossaryentry{Ulr}{
+    type=symbolslist,
+    name={$U^{LR}$},
+    description={Ewald Energy for Reciprocal (Long-Range) Space}
+}
+\newglossaryentry{Usr}{
+    type=symbolslist,
+    name={$U^{SR}$},
+    description={Ewald Energy for Real (Short-Range) Space}
+}
+\newglossaryentry{Us}{
+    type=symbolslist,
+    name={$U^{S}$},
+    description={Self Interaction Correction to Ewald Energy}
+}
+
+\printglossary[type=\acronymtype, title=List of Abbreviations]
+
+% Print the symbols
+\printglossary[type=symbolslist, title=List of Symbols]
+This thesis uses the \gls{fem} approach in \gls{3d} simulations.  
+Furthermore, the parameter \gls{Cg} denotes contiguity, which influences the dihedral angle \gls{phid}.  
+The energies calculated, such as \gls{Ulr}, \gls{Usr}, and \gls{Us}, are essential in determining the stability of the system.
