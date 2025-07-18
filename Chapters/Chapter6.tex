@@ -1,10 +1,13 @@
-\chapter{Conclusions and future work}
-\label{Chapter6} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
-\lhead{Chapter 6. \emph{Conclusions and future work}}
+\chapter{Conclusions}
+\label{Chapter6}
+\lhead{Chapter 6. \emph{Conclusions and Future Work}}
+In this thesis, we have added a modification to 3D-Ewald, which converts the sum to filter out the interactions in the $z$-direction. This results in Ewald summation for slab geometries. The proposed method introduces a top-hat function that effectively eliminates interactions in the non-periodic dimensions while preserving the key characteristics of the three-dimensional Coulomb summation. After implementing this method, the performance analysis of the codes suggested that computing the distance and the error function are the computational bottlenecks in the program. The distance is a simple function and does not offer much room for code optimization. However, the error function in the real-space interaction can be computed efficiently through a polynomial approximation, leading to an overall savings of 15\%  of the computational time. The computational bottleneck of the distance function is due to multiple calls to it, and because these computations are embarrassingly parallel, the computations can be reduced by parallelizing the loops used for its computation. The final implementation results in a ten-fold reduction in computational overhead with the desired accuracy. The accuracy of the proposed method (and the computational time) can also be tuned by adjusting its parameter $\gamma$, providing flexibility in balancing precision and computational efficiency. Our method is conceptually straightforward, easily understood, and can be seamlessly integrated into existing codebases. Evaluation of our algorithm’s parallelization and scalability showed significant performance gains, highlighting its effectiveness for high-performance computing environments. 
 
-\section{Conclusions}
+\input{Tables/conclusion}
 
-Our algorithm is straight-forward, easy to understand and integrate in the existing computer codes
+Table~\ref{tab:conclusion} shows that a 1-nanosecond simulation using our method results in a tenfold reduction in simulation time compared to the traditional 2D-PME method. Notably, it outperforms the widely used 3D-SPME approach in terms of computational efficiency. 
 
-\section{Scope for future work}
-forces
+\section{Future Work}
+Our work has shown promising results for systems for two-dimensional periodicity. A natural extension of this approach would be its application to systems with one-dimensional periodicity. Moreover, the computation of the minimum image distance in real space summation remains a computational bottleneck. To address this, efficient techniques and functions can be explored to facilitate faster calculation of this distance. Also, more cost-effective methods can be used to compute this summation, such as interpolation of charges using B-splines in a potential field framework, making overall scaling of this summation as $O(N)$. However, care must be taken to ensure the accuracy of the method. We have incorporated a top-hat function, which was constructed using Fermi functions. Alternative formulations of this function using tanh or arctan can also be used to assess the performance of this method.
+
+These results highlight the significant potential of our method for advancing the simulation of slab-like geometries and complex real-world phenomena such as electrical double layers. This substantial performance improvement paves the way for a broad range of applications, enabling simulations of larger molecular systems or extended time scales without compromising accuracy or efficiency. 

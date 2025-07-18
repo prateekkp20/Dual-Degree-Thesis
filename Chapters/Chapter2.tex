@@ -2,11 +2,11 @@
 \label{Chapter2} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 \lhead{Chapter 2. \emph{Coulombic Interaction and Ewald Summation}} 
 
-In this chapter, we provide a basic framework of Coulombic interaction and Ewald summation in a periodic system. Consider a 3D periodic system, which encloses $n_p$ charges in a simulation box. The box is infinitely repeated in all dimensions. For simplicity, we assume an orthorhombic periodic cell and therefore the coordinates of the ions can be obtained by translating along the lattice vectors. For a charge neutral system ($\sum_i q_i=0$) with $n_p$ point charges, $q_1,q_2....,q_{n_{p}}$ placed at $\vec{r_1},\vec{r_2},...,\vec{r_{n_p}}$, the energy of interaction (denoted as `$U$') of the ions in this unit cell with all the other ions and among themselves arising from Coulomb forces is given by
+In this chapter, we provide a basic framework of Coulombic interaction and Ewald summation in a periodic system. Consider a 3D periodic system that encloses $n_p$ charges in a simulation box. The box is infinitely repeated in all dimensions. For simplicity, we assume an orthorhombic periodic cell and, therefore, the coordinates of the ions can be obtained by translating along the lattice vectors. For a charge neutral system ($\sum_i q_i=0$) with $n_p$ point charges, $q_1,q_2....,q_{n_{p}}$ placed at $\vec{r_1},\vec{r_2},...,\vec{r_{n_p}}$, the energy of interaction (denoted as `$U$') of the ions in this unit cell with all the other ions and among themselves arising from Coulomb forces is given by~\cite{frenkel2002understanding}
 \begin{flalign}
     (4\pi\epsilon_o)U &= \frac{1}{2}\sum_{\vec{M}= -\infty}^{\infty}{' \sum_{i=1}^{n_p}\sum_{j=1}^{n_p} \frac{q_iq_j}{|\vec{r_i}-\vec{r_j}+\vec{M}.\vec{L}|}}.\label{eq:coul}
 \end{flalign}
-where $\vec{M} \in \mathbb{Z}^3$ indexes all periodic images of the simulation box of sides $\vec L$, and the prime (${}^\prime$) symbol is introduced to exclude the term $j = i$ in the summation, when $\vec{M}=0 $. The summation is conditionally convergent, meaning that the final value depends on the specific order in which the terms are summed. Given that $\rho(\vec{r})$ is the charge density at any point $\vec{r}$ and $\phi(\vec{r})$ is the potential field at point $\vec{r}$, the summation can be rewritten as:
+where $\vec{M} \in \mathbb{Z}^3$ indexes all periodic images of the simulation box of sides $\vec L$, and the prime (${}^\prime$) symbol is introduced to exclude the term $j = i$ in the summation, when $\vec{M}=0 $. The summation is conditionally convergent, which means that the final value depends on the specific order in which the terms are summed. Given that $\rho(\vec{r})$ is the charge density at any point $\vec{r}$ and $\phi(\vec{r})$ is the potential field at point $\vec{r}$, the summation can be rewritten as:
 \begin{flalign}
      (4\pi\epsilon_o)U &= \frac{1}{2} \int_{-\infty}^{\infty} d\vec{r_2}\, \rho(\vec{r_2}) \int_{-\infty}^{\infty} \frac{d\vec{r_1}\, \rho(\vec{r_1})}{|\vec{r_1}-\vec{r_2}|} \\
      &= \frac{1}{2}\int_{-\infty}^{\infty} d\vec{r_2}\, \rho(\vec r_2)\phi(\vec r_2)
@@ -15,7 +15,7 @@ For a point charge system, $\rho(\vec{r})$ is given by
 \begin{equation}
     \rho(\vec{r})=\sum_{\vec{M}=-\infty}^{\infty}\sum_{j=1}^{n_p}q_j\delta(\vec{r}-\vec{r_j}+\vec{M}.\vec{L})
 \end{equation}
-To simulate an ionic system, it is essential to compute these interactions acting on each ion. However, the computational cost of these calculations typically scales quadratically with the number of ions, i.e., $O(N^2)$. This becomes computationally prohibitive for realistic molecular simulations involving as many as $10^5$ ions with \ac{PBC}.
+To simulate an ionic system, it is essential to compute these interactions acting on each ion. However, the computational cost of these calculations typically scales quadratically with the number of ions, that is, $O(N^2)$. This becomes computationally prohibitive for realistic molecular simulations that involve as many $10^5$ ions with \ac{PBC}.
 
 \section{Ewald Summation Method}
 The Ewald summation method, developed by Ewald~\cite{Ewald1921}, is a classical approach used to compute long-range Coulombic interactions in periodic systems. Ewald proposed decomposing the $1/r$ potential into two rapidly converging parts
@@ -54,7 +54,7 @@ The computational cost of the traditional Ewald summation method, which scales a
 The electrostatic force on $i^{th}$ atom in each direction ($\beta = x,y,z$) can be obtained by taking a derivative of the above components with respect to $\vec{r_{\beta i}}$. Each of the individual term would be defined as $\partial U^{LR}/\partial  r_{\beta i}$ (reciprocal space force), $\partial U^{SR}/\partial r_{\beta i}$ (real space force) and $\partial U^{S}/\partial r_{\beta i}$ (correction force).
 
 \subsection{Smooth Particle Mesh Ewald}
-The particle mesh Ewald method was first introduced by Hockney and Eastwood~\cite{hockney2021computer} utilising Laplace interpolation techniques to assign charges onto a regular grid. However, the discontinuous nature of Laplace interpolations posed challenges in accurately computing forces. To address this, the \ac{SPME} method was later developed by Essmann \textit{et al.}~\cite{SPME} which employs exponential B-splines to smoothly interpolate the charge distribution on the grid, enabling more accurate and efficient computations. These approaches employ fast fourier transform (FFT), thereby decreasing the computational complexity from $O(N^2)$ to $O[Nlog(N)]$, with a multiplicative constant that varies based on the desired level of accuracy.
+The particle mesh Ewald method was first introduced by Hockney and Eastwood~\cite{hockney2021computer} utilising Laplace interpolation techniques to assign charges onto a regular grid. However, the discontinuous nature of Laplace interpolations posed challenges in accurately computing forces. To address this, the \ac{SPME} method was later developed by Essmann \textit{et al.}~\cite{SPME} which employs exponential B-splines~\cite{prautzsch2002bezier} to smoothly interpolate the charge distribution on the grid, enabling more accurate and efficient computations. These approaches employ fast fourier transform (FFT)~\cite{FFTW05}, thereby decreasing the computational complexity from $O(N^2)$ to $O[Nlog(N)]$, with a multiplicative constant that varies based on the desired level of accuracy.
 
 In the \ac{SPME} method, the structure factor in the reciprocal space sum is expressed as
 \begin{equation}
@@ -88,7 +88,10 @@ where $\mathcal{F}_{3D}(Q)$ is the 3D fourier transform of the array Q of interp
 \begin{equation}
     Q(t_x, t_y, t_z) =  \sum_{i=1}^{N} \sum_{n_1, n_2, n_3} q_i M_n(u_{1i} - t_x - n_1 K_1) \times M_n(u_{2i} - t_y - n_2 K_2) \times M_n(u_{3i} - t_z - n_3 K_3)
 \end{equation}
-With $ B_{3D}(k_x, k_y, k_z)$ defined as $$ B_{3D}(k_x, k_y, k_z) = \left| b\left(2\pi \frac{k_x}{K_x},n\right) \right|^2 \cdot \left| b\left(2\pi \frac{k_y}{K_y},n\right) \right|^2 \cdot \left| b\left(2\pi \frac{k_z}{K_z},n\right) \right|^2$$
+With $ B_{3D}(k_x, k_y, k_z)$ defined as 
+\begin{flalign}
+    B_{3D}(k_x, k_y, k_z) = \left| b\left(2\pi \frac{k_x}{K_x},n\right) \right|^2 \cdot \left| b\left(2\pi \frac{k_y}{K_y},n\right) \right|^2 \cdot \left| b\left(2\pi \frac{k_z}{K_z},n\right) \right|^2 \label{eq:bsplineArray}
+\end{flalign}
 Define $\chi(p_1,p_2,p_3)$ as
 \begin{flalign}
     \nonumber \chi(p_x,p_y,p_z) &= \frac{2\pi}{L_xL_yL_z}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}{}^\prime \frac{1}{|\vec{G}|^2}\,{exp}\left(\frac{-1}{4\alpha^2}|\vec{G}|^2\right)\,\times B_{3D}(k_x,k_y,k_z)
@@ -107,7 +110,7 @@ Note that $E_{3D}\cdot B_{3D} = \mathcal{F}^{-1}_{3D}(\chi)$. The approximate re
     \nonumber &\quad\quad\quad\quad\quad\cdot K_xK_yK_z\,\mathcal{F}^{-1}_{3D}(Q)(k_x,k_y,k_z) \\
     &=\sum_{k_x=0}^{K_1-1} \sum_{k_y=0}^{K_2-1} \sum_{k_z=0}^{K_3-1} Q(k_x,k_y,k_z) \cdot (\chi \star Q)(k_x,k_y,k_z)
 \end{flalign}
-where $\star$ is the convolution operation expressed as
+where $\star$ is the convolution~\cite{bracewell1966fourier} operation expressed as
 \begin{flalign}
     \chi \star Q(k_x,k_y,k_z) &= \sum_{k_x^\prime=0}^{K_1-1} \sum_{k_y^\prime=0}^{K_2-1} \sum_{k_z^\prime=0}^{K_3-1} \chi (k_x^\prime,k_y^\prime,k_z^\prime) \times Q (k_x-k_x^\prime,k_y-k_y^\prime,k_z-k_z^\prime)
 \end{flalign}
@@ -121,7 +124,7 @@ In this section, we provide the basic framework for 2D periodic systems. We begi
 \begin{flalign}
     S(\vec{K},h) =\sum_{j=1}^{n_p}q_j\,exp[i(\sigma(k_x)x_{j} + \psi(k_y)y_{j}+hz_{j})] \label{eq:structurefactor}
 \end{flalign}
-The Coulombic interaction in Eq.~(\ref{eq:coul}) for a two-dimensional periodic system is expressed using the Ewald summation (2D-EW\cite{kawata2001rapid}) as
+The Coulombic interaction in Eq.~(\ref{eq:coul}) for a two-dimensional periodic system is expressed using the  \ac{2D-EW}~\cite{kawata2001rapid} as
 \begin{flalign}
     \nonumber (4\pi\epsilon_o)U &= U^{LR}_{k\neq0} +U^{LR}_{k=0} + U^{S} + U^{SR}.
 \end{flalign}
@@ -135,7 +138,7 @@ Each of these terms is written as
     U^S&= -\frac{\alpha}{\sqrt{\pi}}\sum_{i=1}^{n_p} q_i^2, \\
     U_{SR}&=\frac{1}{2}\sum_{i=1}^{n_p}{}^\prime\sum_{j=1}^{n_p} q_i q_j\frac{erfc(\alpha|\vec{r_j}-\vec{r_i}|)}{|\vec{r_j}-\vec{r_i}|}.
 \end{flalign}
-The derivation of these equations can be found in previous literature.@@@Prateek: cite the first paper on this@@@ For the reciprocal space summation, the absence of periodicity along the $z$-direction leads to an integral over this coordinate. Consequently, the summation over $k_z$, discrete in a fully periodic system, becomes a continuous Fourier transform. The real-space contribution to the Ewald summation remains the same in three-dimensional and two-dimensional periodic cases, with the only difference being the choice of the minimum image convention appropriate to each geometry. 
+For the reciprocal space summation, the absence of periodicity along the $z$-direction leads to an integral over this coordinate. Consequently, the summation over $k_z$, discrete in a fully periodic system, becomes a continuous Fourier transform. The real-space contribution to the Ewald summation remains the same in three-dimensional and two-dimensional periodic cases, with the only difference being the choice of the minimum image convention appropriate to each geometry. 
 
 \subsection{2D-Particle Mesh Ewald (2D-PME)}
 In the \aclu{2D-PME} (\ac{2D-PME}) \cite{kawata2001particle,kawata} method, the structure factor in the reciprocal space sum is expressed as 
@@ -191,3 +194,4 @@ For the complete code implementations of this program refer to Appendix \ref{App
     \caption{Comparison of the CPU-times of the 3D and 2D Ewald methods with their particle mesh approach for the calculation of total Coulombic energies. Parameters for the particle mesh implementation were chosen to maintain high accuracy. For the \ac{SPME} method, a grid size of 64 and an interpolation order of 8 were used. For the 2D-PME method, grid sizes of 64 in the x and y directions and 128 in the z direction were taken, with an interpolation order of 8.}
     \label{fig:enter-label}
 \end{figure}
+It is clear from Figure \ref{fig:enter-label} that the traditional 2D-Ewald methods are computationally very expensive and do not scale well as system size increases. Though the \ac{2D-PME} method offers some improvements, it still underperforms relative to the 3D periodic approaches. This highlights a critical limitation for current Ewald methods for 2D-periodic systems, and motivates the development of more efficient methods that are highly scalable and retain the correct spatial treatment of slab-like geometries. 

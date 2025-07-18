@@ -1,8 +1,41 @@
 \chapter{C/C++ Programs}
 \label{AppendixB} % use \ref{AppendixB}
 \lhead{Appendix B. \emph{C/C++ Programs}}
-\section{3D Ewald}
 
 \section{2D Ewald}
+    \subsection{Main file}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/main.cpp}
+    
+    \subsection{dist function}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/dist.cpp}
+    
+    \subsection{Real Space Energy function}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/real.cpp}
+    
+    \subsection{Self Energy function}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/self.cpp}
+    
+    \subsection{2D-EW}
+    \textbf{Reciprocal Space Energy (k $=$ 0)}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/reci0.cpp}
+    
+    \textbf{Reciprocal Space Energy (k $\neq$ 0)}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/reci_integral.cpp}
+    
+    \subsection{2D-PME}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/reci_fft.cpp}
+    
+    \subsection{Helper functions}
+    \lstinputlisting[language=C]{CodeFiles/Ewald2D/func.cpp}
+    
+    \subsection{New 2D Ewald Method}
+        \subsubsection{Direct Ewald}
+        \lstinputlisting[language=C]{CodeFiles/Ewald2D/New2DEwald.cpp}
+        
+        \subsubsection{Particle Mesh Adaptation}
+        \lstinputlisting[language=C]{CodeFiles/Ewald2D/PM2DEwald.cpp}
 
-\section{New Method for 2D Ewald}
+        \subsubsection{Screening Factor Array}
+        \lstinputlisting[language=C]{CodeFiles/Ewald2D/screen.cpp}
+        
+% \section{New Method for 2D Ewald}

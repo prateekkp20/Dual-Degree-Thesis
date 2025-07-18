@@ -1,168 +1,54 @@
-\chapter{Implementation, Performance Analysis and Optimization}
+\chapter{Numerical Evaluation: Accuracy and Efficiency}
 \label{Chapter4}
-\lhead{Chapter 4. \emph{Implementation, Performance Analysis, and Optimization}}
+\lhead{Chapter 4. \emph{Numerical Evaluation: Accuracy and Efficiency}}
 
-\section{Algorithmic Overview and Pseudocode}
-
-\swb{The following paragraph should go in Section 4.2. Only write about the algorithm here.}
+In this chapter, we present a comprehensive analysis of the performance of our newly proposed method with particular focus on its accuracy and efficiency. Through a series of computational experiments, we analyze how different parameters influence the quality of results and CPU-time performance. Specifically, we focus on convergence and the scaling behaviour of our method. All simulations were conducted on ionic systems of sodium (Na\textsuperscript{+}) and chloride (Cl\textsuperscript{-}) ions randomly distributed in a cubic box having a length of 25 \AA. These systems were modelled using the molecular dynamics package LAMMPS~\cite{LAMMPS}. The Ewald splitting parameter $\alpha$ was set to $5.42/L$ as recommended in several previous literature~\cite{frenkel2002understanding}.
 
 The experiments were performed on a machine with a 12-core Intel\textsuperscript{\textregistered} Core\texttrademark{} i5-12500 (12\textsuperscript{th} Gen) processor and 16 GB of RAM. The operating system was OpenSUSE 15.5, and the software used included \texttt{gcc} 7.5.0, FFTW 3.9.9, and GSL 2.6.
+\section{Convergence and Accuracy of Reciprocal-Space Contributions with Varying $\gamma$}
+In this section, we investigate how the reciprocal-space energy converges as the constant $\gamma$ is varied. A model system of 10000 ions was set up in a box with sides of length 25 \AA. As a benchmark, reference energies were computed using mathematically ``exact'' but computationally inefficient two-dimensional Ewald (2D-EW) method~\cite{kawata2001rapid}.
+\subsection{The Role of $\gamma$}
+The parameter $\gamma$ plays a central role in controlling the sharpness of the top-hat function that is introduced in the reciprocal sum of 3D Ewald summation method. The introduction of top-hat function filters the interactions arising from interaction of images in the z-direction.  In the new formulation, the long-range part of the Ewald summation is mathematically expressed as
+\begin{flalign}
+    (4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{{k}}=-\infty}^{\infty}{}^\prime\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] |\,S(\vec G)\,|^2
+\end{flalign}
+here $\vec k$ = \{$k_x,k_y,k_z$\} and  the constant $\gamma$ appears in the function $C_{k_z}(t)$ given by
+\begin{flalign}
+     C_{k_z}(t) &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\hspace{1mm}exp(-i\frac{2\pi n s}{L_z})exp(-s^2t^2)\\
+     &\times \left[\frac{1}{1+ exp(-\gamma(0.5L_z+s))} + \frac{1}{1+ exp(-\gamma(0.5L_z-s))} -1\right]
+\end{flalign}
 
-In this section, we will elaborate on the high-level logic of the implementations of the method. For complete code, refer to Appendix \ref{AppendixB}. 
-\subsection{Helper Functions}
-\textbf{Screening Function Array}:
-
-\textbf{Implementing MIC}:
-
-\subsection{Main Function to Compute Energies}
-\textbf{Real Space Energy}:
-
-\textbf{Reciprocal Space Energy}:
-
-\section{Analysis of Baseline Program}
-After implementing the new 2D Ewald summation algorithm, the subsequent objective was to identify performance bottlenecks in the program, as the next critical step in guiding further optimization efforts. Intel\textsuperscript{\textregistered} VTune\texttrademark{} Profiler was used for this purpose. VTune supports a wide range of analysis types, including Hotspots, Microarchitecture Exploration, Threading, Memory Access, and Platform analysis. With support for multiple programming languages and parallelization frameworks like OpenMP and MPI, VTune improves application speed, scalability, and hardware efficiency across diverse Intel architectures. 
-
-The Hotspot analysis is particularly useful in the early development process of an application as it helps pinpoint the sections of code where the CPU spends the most time, guiding the optimization efforts for maximum performance gains. In the Bottom-up window, detailed performance data is grouped by function and sorted by CPU time. Functions with high CPU time should be prioritized for optimization.
-
-% \swb{Write a few more lines justifying our choice with VTune. Also, list a few different program analyses that VTune supports. Tell readers what is analysed in hotspot analysis and what is the expected output.}
-
-% \swb{It seems we need to briefly describe the implementation before we talk about profiling it.}
-
-Hotspot analysis of the baseline program was performed to identify computational bottlenecks. The results in Fig.~(\ref{fig:result1vtune}), indicate that the real-space component accounts for approximately 60-65\% of the total CPU time. The most expensive function was \texttt{dist}, responsible for inter-particle distance calculations, consuming around 25\% of the execution time. This cost is compounded by repeated calls to the \texttt{\_\_erfc} function, contributing approximately 20\% of the total runtime. These findings highlight the need to optimize the real-space calculations, particularly the error function evaluation, to improve overall performance.
-
-While both \texttt{dist} and \texttt{\_\_erfc} are major contributors to the CPU Time, the \texttt{dist} function offers limited scope for optimization due to the straightforward nature of the algorithm. Therefore, the focus shifts to the \texttt{\_\_erfc} function from \texttt{libm}, the standard math library in the GNU C Library. Using a faster or approximate version of the error function could help reduce execution time and improve performance.
-
-% \swb{What is \texttt{libm}?}
-
-% \begin{figure}[htbp]
-\begin{figure}[H]
-    \centering
-    \begin{minipage}{0.7\textwidth}
-        \fbox{\includegraphics[width=\linewidth]{images/VTuneInitialTime.png}}
-    \end{minipage}%
-    \begin{minipage}{0.3\textwidth}
-        \caption{Execution time details for baseline program.}
-    \end{minipage}
-\end{figure}
-% \begin{figure}[htbp]
-\begin{figure}[h]
-    \centering
-    \includegraphics[width = \linewidth]{images/VTuneInitialHotspot.png}
-    \caption{Hotspot analysis of the baseline Ewald summation implementation, as reported by Intel VTune Profiler. A significant portion of total CPU time is concentrated in the \textit{dist} function (25.8\%), the standard math library's \textit{\_\_erfc} function (19.4\%).}
-    \label{fig:result1vtune}
-\end{figure}
-
-\section{Polynomial Interpolation Optimization}
-\subsection{Polynomial Interpolation of Error Function}
-As deduced in the previous section, a significant portion of the program’s execution time was consumed by calls to the \verb|std::erfc| function. To reduce the computational cost associated with evaluating the complementary error function \(\operatorname{erfc}(x)\) in the real-space part of the Ewald summation, a polynomial interpolation approach was adopted. This technique is outlined in \textit{Handbook of Mathematical Functions by Abramowitz and Stegun}~\cite{abramowitz1965handbook}. The expression used is
-\begin{equation}  
-    erf(x) = 1 - (a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5) e^{-x^2} + \epsilon(x)
-\end{equation}
-\[
-    t = \frac{1}{1 + px}, \quad |\epsilon(x)| \leq 1.5 \times 10^{-7},
-\]
-\[
-p = 0.3275911, \\
-a_1 = 0.254829592, \\
-a_2 = -0.284496736,
-\]
-\[
-a_3 = 1.421413741, \\
-a_4 = -1.453152027, \\
-a_5 = 1.061405429.
-\]
-The polynomial was subsequently adapted as a replacement for the standard $\operatorname{erfc}(x)$ function in the real-space evaluation. This approach is advantageous because $\operatorname{erfc}(x)$ is computationally more expensive than $\operatorname{exp}(x)$. The evaluation of $\operatorname{erfc}(x)$ requires complex numerical approximations to compute an integral that does not have a simple closed form. In contrast, $\operatorname{exp}(x)$ is simpler and optimized,S which makes it significantly faster to compute.
-
-\subsection{Efficiency and Accuracy}
-In order to assess the efficiency of the interpolation-based approach, a series of computations were performed. The number of ions in the system was varied while keeping the box side constant at 25 \AA. 
-
-As shown in the Fig.~(\ref{fig:realspaceopt}), this numerical optimization resulted in a significant improvement in performance. On average, the interpolation method achieved a $15\%$ reduction in runtime, showing improved scalability and efficiency, especially for larger system sizes. This speed-up was achieved without compromising numerical accuracy; the maximum relative error in the real space energies was less than $10^{-5}$, which is well within the acceptable bounds for energy calculations in molecular simulations.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\linewidth]{images/realspaceopt.jpg}
-    \caption{Comparison of CPU runtime between the polynomial approximation and exact error function evaluation as a function of the number of atoms. The side length of the simulation box was fixed at 25 \AA. The polynomial approximation method demonstrates a consistent speed-up of approximately $15\%$ across all system sizes, while maintaining relative errors under $10^{-5}$}
-    \label{fig:realspaceopt}
-\end{figure}
-
-\section{Code-Level Optimizations}
-\subsection{Array Flattening}
-In the implementation, data involving multiple dimensions must be stored in several parts of the program, such as atom positions and charge spreading array for the SPME. While multidimensional arrays are a natural choice for such data, they have drawbacks. 
-
-Dynamically allocated multidimensional arrays often lead to scattered memory layouts and multiple pointer dereferences. This results in poor cache performance and added complexity in memory management. 
-To address this, a one-dimensional array was used to represent the multidimensional structure. For an array with rank $d$ and dimensions $n_1\times \ldots \times n_d$, an element at ($i_1\times \ldots \times i_d$) maps to:
-\begin{flalign*}
-    i_d + n_d \cdot \left( i_{d-1} + n_{d-1} \cdot \left( \ldots + n_2 \cdot i_1 \right)\right)
-\end{flalign*}
-This approach reduced overhead, improved memory locality, and allowed faster access through direct indexing.
-\subsection{Vectorization}
-Vectorization enables the simultaneous processing of multiple data elements using a single instruction. This approach significantly improves both the speed and efficiency of computations. It is a fundamental technique in high-performance numerical computing, scientific simulations, graphics, and machine learning, as it leverages the SIMD (Single Instruction Multiple Data) capabilities present in modern processors.
-
-In this work, the program has been compiled using the flags \texttt{-O3}, \texttt{-mavx2}, \texttt{-march=native}, \texttt{-ftree-vectorize}, and \texttt{-ftree-vectorizer-verbose=1}. The \texttt{-O3} flag enables aggressive optimization, including automatic vectorization of loops. The \texttt{-mavx2} flag ensures that the generated code utilizes AVX2 instructions, which operate on 256-bit registers. This allows the simultaneous processing of 8 single-precision floating-point numbers or 4 double-precision floating-point numbers, thereby greatly accelerating loops and computation-intensive sections of the code.
-
-
-\section{Profiling of Optimized Program}
-% \section{Performance of Optimized Implementation}
-Following the improvements, hotspot analysis of the optimized implementation Fig.~(\ref{fig:resultVTuneFinal}), shows a notable shift in the computational profile. The \texttt{\_\_erfc} function no longer appears among the major hotspots. The primary contributors to CPU time are now \texttt{dist} (35.4\%) and \texttt{real\_omp\_fn.0} (23.2\%), both associated with real-space computations. 
-% Detailed performance improvements are presented in the \textit{Numerical Analysis} section of the thesis.
-\begin{figure}[htbp]
-% \begin{figure}[]
-    \centering
-    \includegraphics[width = \linewidth]{images/VTuneFinalHotSpots.png}
-    \caption{Hotspot analysis of the optimized Ewald summation implementation, using a polynomial interpolation for the error function. The overall CPU time distribution indicates improved efficiency in the real-space term.}
-    \label{fig:resultVTuneFinal}
-\end{figure}
-\begin{figure}[htbp]
-% \begin{figure}[]
-    \centering
-    \begin{minipage}{0.7\textwidth}
-        \fbox{\includegraphics[width=\linewidth]{images/VTuneFinalTime.png}}
-    \end{minipage}%
-    \begin{minipage}{0.3\textwidth}
-        \caption{Execution time details for improved program.}
-    \end{minipage}
-\end{figure}
-
-\section{Parallelization}
-Parallel programming can have an enormous impact on the performance and scalability of computational applications. The motivation for parallelizing code is to reduce its execution time, enabling it to run faster on modern multiprocessor systems. In this context, the Ewald summation algorithm is crucial, as it is computationally intensive. Depending on the specific component of the calculation, its computational complexity ranges from $O(N^2)$ to $O(NlogN)$, making it essential to accelerate through parallel techniques. Efficient parallelization is critical for simulating long-range interactions in order to study large-scale systems.
-
-\subsection{OpenMP}
-In the Ewald summation method, a significant portion of the execution time is consumed by for loops. These loops are particularly well-suited for parallelization using OpenMP~\cite{dagum1998openmp}, a shared-memory parallel programming model that efficiently distributes computational workloads across multiple threads, thereby enhancing overall performance.
-
-% \swb{Cite OpenMP.}
-
-OpenMP facilitates incremental parallelization of existing sequential code with minimal modifications. Its accessibility and simplicity make it especially advantageous, as it does not require specialized hardware such as supercomputers. Instead, it can yield substantial performance improvements even on standard personal computers equipped with multi-core processors.
-
-OpenMP utilizes \verb|#pragma|  directives, which are combined with directive specifications and optional clauses. An OpenMP directive begins with \verb|#pragma omp|, followed by a specific directive keyword. 
-By default, OpenMP creates a number of threads that is typically equal to the number of CPU cores available. However, this can also be modified via \verb|omp_set_num_threads()| function. For instance, the parallelization of a for loop is expressed as follows:
-\lstinputlisting[language=C]{CodeFiles/forloop.c}
-
-% \swb{Did you mention how many threads are created by default?}
-
-\subsection{Ensuring Correctness in Loop-Carried Dependencies}
-\textbf{Reduction:} The \verb|reduction| clause is used to safely accumulate the result of a shared variable such as the real or the reciprocal energies. Each thread maintains a private copy of the reduction variable, and they automatically combine that at the end of the parallel region using the specified reduction operator. An example of its application in the reciprocal space energy calculation is shown below
-\lstinputlisting[language=C]{CodeFiles/reduction.c}
-
-\textbf{Race condition during charge spreading:} A naïve approach that assigns one thread to map each charge onto the grid can lead to synchronization issues when multiple threads attempt to update the same grid point. During the computation of the charge spreading array $Q$, overlapping interpolation regions may cause several threads to modify the same grid location at the same time, resulting in a race condition and potentially incorrect values. To handle this, the \verb|atomic update| clause in OpenMP was used to ensure that updates are performed atomically, thereby preventing simultaneous read and write operations by different threads.
-\lstinputlisting[language=C]{CodeFiles/atomic.c}
-
-\textbf{Nested loops:} To parallelize the independent nested loops involved in the reciprocal space summation over the three-dimensional grids, the \texttt{collapse(3)} clause is employed. This directive flattens the nested loops into a single iteration space, thereby enhancing load balancing and facilitating uniform distribution of the computational workload across threads.
-\lstinputlisting[language=C]{CodeFiles/collapse.c}
-% \clearpage
-\subsection{Performance Evaluation}
-To evaluate the effectiveness of OpenMP-based parallelization, a series of calculations were performed across different system sizes. The execution times were recorded by varying the number of OpenMP threads from 1 to 23, examining the scalability of the program. 
 \begin{figure}[htbp]
     \centering
-    \subfigure[Total simulation time for different thread counts for direct Ewald summation for our new formulation.]{%
-        \includegraphics[width=0.45\textwidth]{images/threadstimetotal.jpg}
-        \label{fig:thread-a}
-    }
-    \hfill
-    \subfigure[Total simulation time for new method with particle mesh interpolation (grid: $64 \times 64 \times 512$, order: 8) across different thread counts.]{%
-        \includegraphics[width=0.45\textwidth]{images/threadstimeSPMEtotal.jpg}
-        \label{fig:thread-b}
-    }
-    \caption{Comparison of total simulation time for new formulation across different thread counts for (a) direct Ewald summation and (b) particle mesh interpolation. Performance improves significantly with multithreading, particularly up to the number of physical cores available.}
-    \label{fig:threading}
+    \includegraphics[scale=0.4]{images/logerror_vs_kz_forreport.jpg}
+    \caption{Convergence of relative errors in $U_{LR}$ with $k_z$ for various values of $\gamma$.}
+    \label{fig:convergence_gamma}
 \end{figure}
 
-The results demonstrate a significant reduction in the execution times with increasing threads, up to 12, which corresponds to the number of physical CPU cores available on the system. Beyond this point, the performance improvement begins to plateau. This behaviour shows the potential of parallelization within the bounds of the available hardware, and further improvements may require more advanced hardware.
+As shown in Fig.~(\ref{fig:convergence_gamma}) and discussed in Section~\ref{finding_gamma}, the use of different $\gamma$ values significantly influences the rate of convergence of the reciprocal-space energy. Larger $\gamma$ values lead to relatively faster convergence but introduce oscillatory behaviour in the energy estimates with low accuracy, contrary to smaller values, which have high accuracy and fewer oscillations. To achieve convergence in energies, one needs to reach a threshold $k_z$. Consequently, this brings a major drawback: for every additional iteration of $k_z$ in the main energy summation, the structure factor $S(\vec G)$~Eq.(\ref{eq:structurefactor}) is recomputed, which scales as $O(N)$, adding to the computational overhead for high precision simulations. 
+
+To eliminate this cost, we transition to the use of the Particle Mesh adaptation of our new method, as formulated in Eq.~(\ref{eq:newreci2DSPME}). In this formulation, the most computationally expensive step becomes the charge interpolation on grids, which is executed only once and outside the main energy summation loop. As a result, the main energy summation loop is no longer the computational bottleneck, enabling significantly faster calculations without sacrificing accuracy.
+
+\section{Implementation with Particle Mesh Ewald}
+The Particle Mesh Ewald formulation introduces several additional parameters that directly impacts both computational efficiency and numerical accuracy. They are the resolution of the mesh grid used for the Fast Fourier Transform (FFT) and the order of the B-spline interpolation for charge assignment. In this section, we systematically investigate how variations in these parameters affect the performance of our method, particularly in conjunction with different values of parameter $\gamma$.
+
+In our modified implementation, we performed extensive tests across a variety of $\gamma$ values, grid sizes, and B-spline interpolation orders. For each configuration, we measured the accuracy of the computed electrostatic energy and recorded the CPU execution time. These combinations are presented in the Tables~\ref{tab:tablespme_gamma0p2}, \ref{tab:tablespme_gamma0p5}, \ref{tab:tablespme_gamma1}, \ref{tab:tablespme_gamma2p5}, and \ref{tab:tablespme_gamma10}
+
+\input{Tables/N2D-PME/color}
+\input{Tables/N2D-PME/gamma0p2}
+\input{Tables/N2D-PME/gamma0p5}
+\input{Tables/N2D-PME/gamma1}
+\input{Tables/N2D-PME/gamma2p5}
+\input{Tables/N2D-PME/gamma10}
+
+Several general trends emerged from the analysis. Lower values of $\gamma$ were found to require finer grids in the $ z$-direction in order to achieve a comparable level of accuracy, which in turn increases the computational cost. Increasing the B-spline interpolation order generally improves the accuracy of the energy calculations; however, that effect diminishes beyond a certain order while the computational overhead continues to increase. While multiple configurations may yield acceptable results, the combination of $\gamma = 1$ or $0.5$, a grid size of $64 \times 64 \times 128$, and a B-spline interpolation order of 8 was found to offer the most favourable balance between numerical accuracy and computational efficiency among the cases evaluated.
+
+\section{Scaling Behaviour with System Size}
+To evaluate the scalability of our method with respect to system size, we analyzed the computational performance of the PME implementation of our method. The number of ions were varied from 1,000 to 30,000, with particle positions randomly distributed within a fixed simulation box. Throughout all simulations, the PME configuration was kept uniform with a grid size of $64 \times 64 \times 128$, a B-spline interpolation order of 8, and $\gamma = 1$, as identified in the previous section. For comparison, we also included results from previously established methods based on 2D and 3D periodic boundary conditions, with particle mesh adaptation for a similar level of accuracy. The scaling behavior of the total computation time with increasing system size is shown in Fig.~(\ref{fig:scaling_results}). 
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\linewidth]{images/Scaling_behaviour_Result30k.jpg}
+    \caption{Scaling behaviour of the computation time for total Ewald energies with increasing system size for the optimized PME implementation. The number of ions was varied from 1,000 to 30,000 while keeping the simulation box size fixed.  Our method demonstrated highly improved performance compared to the conventional \ac{2D-PME} approach and a similar performance to 3D-\ac{SPME}, using the same particle mesh configuration and achieving a comparable level of accuracy.}
+    \label{fig:scaling_results}
+\end{figure}
+Our method shows a substantial improvement in computational efficiency compared to the conventional \ac{2D-PME} method. The scaling of the CPU time is significantly better as shown with the slower growth of the computational time in our method's curve. This enhanced performance can be attributed to the 3D-\ac{SPME} like formulation of our new method, which is evident as both show a similar performance. Since the 3D-SPME method is known for its scalability and accuracy, our implementation matches its performance while providing adaptability to slab-like geometries often encountered in biological and interfacial simulations. 

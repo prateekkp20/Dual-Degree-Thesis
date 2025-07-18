@@ -1,0 +1,22 @@
+\begin{table}[]
+\centering
+\begin{tabular}{|c|
+>{\columncolor[HTML]{FFFFFF}}c |
+>{\columncolor[HTML]{FFFFFF}}c |
+>{\columncolor[HTML]{FFFFFF}}c |
+>{\columncolor[HTML]{FFFFFF}}c |
+>{\columncolor[HTML]{FFFFFF}}c |}
+\hline
+ \begin{tabular}[c]{@{}c@{}}CPU\\      Time (sec)\end{tabular} $\rightarrow$ &
+  \cellcolor[HTML]{D9EAD3}Real &
+  \cellcolor[HTML]{D9EAD3}\begin{tabular}[c]{@{}c@{}}Reciprocal\\      (k $\neq$ 0)\end{tabular} &
+  \cellcolor[HTML]{D9EAD3}\begin{tabular}[c]{@{}c@{}}Reciprocal\\      (k = 0)\end{tabular} &
+  \cellcolor[HTML]{D9EAD3}\begin{tabular}[c]{@{}c@{}}Total\\      (sec)\end{tabular} &
+  \cellcolor[HTML]{D9EAD3}\begin{tabular}[c]{@{}c@{}}Time for 1 ns\\      Simulations (days)\end{tabular} \\ \hline
+\cellcolor[HTML]{D9EAD3}3D-SPME   & 0.1519 & 0.0291 &       & 0.1811 & 2.1 \\ \hline
+\cellcolor[HTML]{D9EAD3}2D-PME                                                      & 0.1226 & 1.4049 & 0.0446 & 1.5720 & 18.2 \\ \hline
+\cellcolor[HTML]{D9EAD3}\begin{tabular}[c]{@{}c@{}}Our Method\\with PME\end{tabular} & 0.0895 & 0.0245 &       & 0.1139 & 1.3 \\ \hline
+\end{tabular}
+\caption{Computational time breakdown for a 1 ns MD simulation of a 10,000-atom system}
+\label{tab:conclusion}
+\end{table}

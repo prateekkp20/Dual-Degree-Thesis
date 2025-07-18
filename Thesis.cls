@@ -207,7 +207,8 @@
 %-------------------------------------------------   
 \examiner{} % Your examiner's name - this is not currently used anywhere in the template, cite it with \examname if you want it
 %-------------------------------------------------   
-\degreeprogram{Master of Technology} % Your degree name - this is currently used in the title page and abstract
+\degreeprogram{B.Tech. - M.Tech. (Dual Degree)} % Your degree name - this is currently used in the title page and abstract
+% \degreeprogram{Master of Technology} % Your degree name - this is currently used in the title page and abstract
 %-------------------------------------------------   
 \authors{\texorpdfstring{\href{https://prateekkp20.github.io/}{Prateek Kumar Pandey}}{Prateek Kumar Pandey}} % Your name - this is used in the title page and abstract
 %-------------------------------------------------   
@@ -324,7 +325,7 @@
 		Degree for which submitted:  \textbf{BT-MT} \hfill Department:  \textbf{CHE} \\
 		Thesis title: \textbf{\@title}\\
 		Thesis supervisors:  \textbf{\supnameA} and \textbf{\supnameB}\\
-		Month and year of thesis submission: \textbf{{\large \today}\\[0.4cm] }
+		Month and year of thesis submission: \textbf{{\large July, 2025}\\[0.4cm] }
 		\HRule \\[1.5cm] % Horizontal line	
 	
   \end{flushleft}

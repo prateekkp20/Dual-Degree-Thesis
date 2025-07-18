@@ -8,7 +8,7 @@
 In the case of a two-dimensional periodic system, the summation over the $m_z$ component in Eq.~(\ref{eq:coul}) is omitted, which alters the Ewald formulation relative to the fully periodic (3D) case and leads to a Fourier integral, thereby increasing the computational cost. In this chapter, we propose to retain this summation as in the three-dimensional periodic system, and introduce a top-hat function, which acts as a filter for removing the contributions that are not from the 2D-Ewald summation. This function is set up so that it eliminates contribution from periodic images along the $z$-direction, while retaining the efficiency of 3D-Ewald summation in the reciprocal space. 
  
 \section{Top-hat function}
-\begin{figure}[]% if you want to fix the position of this image, add H inside the []
+\begin{figure}[]
     \centering
     \includegraphics[width=\linewidth]{images/simulationcell.jpg}
     \caption{Schematic figure showing the basic idea of the correction.}
@@ -30,8 +30,8 @@ The smoothed version of $\phi(z)$ is expressed as:
 \end{flalign}
 This function uses a linear combination of two Fermi functions (sigmoid functions) to obtain a symmetrical function about the origin. The positive constant \textbf{$\gamma$} determines the steepness of the top-hat around the edges. The behaviour of $\phi(z)$ Eq. (\ref{eq:1}) is shown in Fig.~(\ref{fig:tophat}). Other forms of the top-hat functions can also be used; some examples are as follows:
 \begin{flalign}
-        \phi(z) &= \frac{1}{2}[ \tanh(\gamma(x + 0.5L)) -\tanh(\gamma(x - 0.5L)) ] \\
-        \phi(z) &= \frac{2}{\pi}\left[ \arctan \left( e^{\gamma (-x + 0.5L)} \right) + \arctan \left( e^{\gamma (x + 0.5L)} \right) \right]- 1 
+        \phi(z) &= \frac{1}{2}[ \tanh(\gamma(x + 0.5L_z)) -\tanh(\gamma(x - 0.5L_z)) ] \\
+        \phi(z) &= \frac{2}{\pi}\left[ \arctan \left( e^{\gamma (-x + 0.5L_z)} \right) + \arctan \left( e^{\gamma (x + 0.5L_z)} \right) \right]- 1 
 \end{flalign}
 \begin{figure}[htbp]
     \centering
@@ -43,7 +43,7 @@ This function uses a linear combination of two Fermi functions (sigmoid function
 A vacuum is introduced within the simulation cell along the $z$-axis to accomplish the above, resulting in a total side length of $ L_z$. Ideally, this length must be long enough for the next periodic image to lie in the region where this function $\phi(z)$ is precisely zero. 
 
 \section{Mathematical Details}
-To evaluate the long-range contribution to the electrostatic energy in a two-dimensional (2D) periodic system, we begin with the derivation of the standard three-dimensional (3D) Ewald summation expression. A top-hat function, denoted by $\phi(z)$, is introduced to eliminate the influence of periodic images along the non-periodic $z$-direction. This function ensures that only the electrostatic interactions within the simulation box along the $z$-direction are retained, effectively reducing the system to 2D while preserving the 3D summation structure and efficiency.
+To evaluate the long-range contribution to the electrostatic energy in a two-dimensional (2D) periodic system, we begin with the derivation of the standard three-dimensional (3D) Ewald summation expression. A top-hat function, denoted by $\phi(z)$, is introduced to eliminate the influence of periodic images along the non-periodic $z$-direction. This function ensures that only the electrostatic interactions within the simulation box along the $z$-direction are retained, effectively reducing the system to be 2D periodic while preserving the 3D Coulomb summation structure and efficiency.
 
 The long-range part of the Coulomb interaction, initially expressed as $\frac{\text{erf}(\alpha r)}{r}$, is converted into an integral form using the identity\cite{erf}:
 $$
@@ -67,9 +67,8 @@ The Poisson summation formula~\cite{cordoba1988formule} converts the expression 
 The function $C_{k_z}(t)$ is given by
 \begin{flalign}
      C_{k_z}(t) &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\,exp(-i\frac{2\pi n s}{L_z})\, exp(-s^2t^2)\, \phi(s) \label{eq:Cz}
-     % \\ &=\frac{1}{L_z}\int_{-\infty}^{\infty}ds\hspace{1mm}exp(-i\frac{2\pi n s}{L_z})\hspace{1mm} exp(-s^2t^2)\left[\frac{1}{1+ exp(-\gamma(0.5L_z+s))} + \frac{1}{1+ exp(-\gamma(0.5L_z-s))} -1\right]
 \end{flalign}
-Eq. (\ref{eq:transform}) is written using the reciprocal vector formulation as
+Eq. (\ref{eq:transform}) is reformulated in terms of the reciprocal lattice vector ($\vec{G}$) as
 \begin{flalign*}
     \nonumber(4\pi\epsilon_o)U^{LR}& =\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\sum_{i=1}^{n_p}\sum_{j=1}^{n_p}q_i q_j\int_{0}^{\alpha}\frac{dt}{t^2}\,{ exp}\left[i\vec G.(\vec r_i-\vec r_j)\right]\times C_{k_z}(t)\,{ exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\\
     &=\frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t)\,{exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right]\sum_{j=1}^{n_p}\sum_{k=1}^{n_p}q_i q_j\,{ exp}\left[i\vec G.(\vec r_i-\vec r_j)\right]
@@ -84,13 +83,13 @@ Define $\Lambda(p_1,p_2,p_3)$ as
 \begin{flalign}
     \nonumber \Lambda(p_x,p_y,p_z) &= \frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}{}^\prime \left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] 
     \\&\times B_{3D}(k_x,k_y,k_z)\times \exp\left( i \frac{2\pi k_x p_x}{K_x} + i \frac{2\pi k_y p_y}{K_y} + i \frac{2\pi k_z p_z}{K_z} \right)
-    \\&=\mathcal{F}_{3D}(E_{2D-M}.B_{3D})(p_x,p_y,p_z)
+    \\&=\mathcal{F}_{3D}(E_{New-2D}.B_{3D})(p_x,p_y,p_z)
 \end{flalign}
-where the new screening factor array $E_{2D-M}$ is defined as
+where the new screening factor array $E_{New-2D}$ is defined as
 \begin{flalign}
-    E_{2D-M}(k_x,k_y,k_z) &= \frac{\sqrt{\pi}}{L_xL_y}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] 
+    E_{New-2D}(k_x,k_y,k_z) &= \frac{\sqrt{\pi}}{L_xL_y}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right] \label{eq:N2D-ScreenFunction}
 \end{flalign}
-Note that $E_{2D-M}\cdot B_{3D}(k_x,k_y,k_z) = \mathcal{F}^{-1}_{3D}(\Lambda)$. 
+Note that $E_{New-2D}\cdot B_{3D}(k_x,k_y,k_z) = \mathcal{F}^{-1}_{3D}(\Lambda)$. 
 Furthermore, the structure factor can be efficiently calculated using the smooth particle mesh Ewald (SPME) method by using fast fourier transforms (FFTs).
 \begin{flalign}
     \nonumber (4\pi\epsilon_o)U^{LR}  & \approx \frac{\sqrt{\pi}}{L_xL_y}\sum_{\vec{\mathbf{k}}=-\infty}^{\infty}{}^{\prime}\left[ \int_{0}^{\alpha}\frac{dt}{t^2}C_{k_z}(t){exp}\left(\frac{-1}{4t^2}|\vec G|_{xy}^2\right)\right]\,B_{3D}(k_x,k_y,k_z)
